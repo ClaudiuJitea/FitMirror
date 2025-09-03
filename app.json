@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "virtual-tryon-app",
-    "slug": "virtual-tryon-app",
+    "name": "FitMirror",
+    "slug": "fitmirror",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "virtualtryonapp",
+    "scheme": "fitmirror",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

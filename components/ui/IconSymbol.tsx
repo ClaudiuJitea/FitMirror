@@ -5,7 +5,7 @@ import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
 import { ComponentProps } from 'react';
 import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
 
-type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>;
+type IconMapping = Partial<Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>>;
 type IconSymbolName = keyof typeof MAPPING;
 
 /**
@@ -14,10 +14,35 @@ type IconSymbolName = keyof typeof MAPPING;
  * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
  */
 const MAPPING = {
+  // Existing mappings
   'house.fill': 'home',
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
   'chevron.right': 'chevron-right',
+  
+  // Tab bar icons
+  'camera.fill': 'camera-alt',
+  'photo.stack': 'photo-library',
+  'gearshape.fill': 'settings',
+  
+  // Additional common icons
+  'chevron.left': 'chevron-left',
+  'plus': 'add',
+  'eye': 'visibility',
+  'eye.slash': 'visibility-off',
+  'pencil': 'edit',
+  'trash': 'delete',
+  'checkmark.circle.fill': 'check-circle',
+  'xmark.circle.fill': 'cancel',
+  'arrow.up.right.square': 'open-in-new',
+  'sparkles': 'auto-awesome',
+  'square.and.arrow.up': 'share',
+  'square.and.arrow.down': 'file-download',
+  'square': 'photo',
+  'circle': 'settings',
+  'folder': 'folder',
+  'grid.circle': 'grid-view',
+  'slider.horizontal.3': 'tune',
 } as IconMapping;
 
 /**
