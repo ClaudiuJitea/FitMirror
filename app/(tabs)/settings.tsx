@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
   },
   profileImageContainer: {
     position: 'relative',
-    marginRight: 16,
+    alignItems: 'center',
   },
   profileImage: {
     width: 50,
@@ -505,8 +505,8 @@ const styles = StyleSheet.create({
   },
   editBadge: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
+    bottom: -2,
+    right: -2,
     width: 16,
     height: 16,
     borderRadius: 8,
@@ -521,7 +521,7 @@ const styles = StyleSheet.create({
   },
   centeredProfileInfo: {
     alignItems: 'center',
-    marginTop: 6,
+    marginTop: 12,
   },
   profileName: {
     fontSize: 16,

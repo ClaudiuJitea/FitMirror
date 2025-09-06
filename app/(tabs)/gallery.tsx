@@ -58,19 +58,20 @@ export default function GalleryScreen() {
 
   const handleItemPress = (item: GalleryItem) => {
     if (item.type === 'result') {
-      // Navigate to result view
-      router.push({
-        pathname: '/result',
-        params: {
-          imageUri: item.uri,
-          isFromGallery: 'true',
-        },
-      });
+      // Show modal for result images too, with option to view or delete
+      setSelectedItem(item);
+      setModalVisible(true);
     } else {
       // Show custom modal for user photos and outfits
       setSelectedItem(item);
       setModalVisible(true);
     }
+  };
+
+  const handleItemLongPress = (item: GalleryItem) => {
+    // Show delete confirmation for any item type
+    setSelectedItem(item);
+    deleteItem(item.id);
   };
 
   const navigateToStyleMe = (item: GalleryItem) => {
@@ -110,6 +111,7 @@ export default function GalleryScreen() {
     <TouchableOpacity
       style={styles.galleryItem}
       onPress={() => handleItemPress(item)}
+      onLongPress={() => handleItemLongPress(item)}
     >
       <Image
         source={{ uri: item.uri }}
@@ -148,14 +150,33 @@ export default function GalleryScreen() {
       </View>
 
       {/* Gallery Grid */}
-      <FlatList
-        data={galleryData}
-        renderItem={renderGalleryItem}
-        keyExtractor={(item) => item.id}
-        numColumns={2}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.galleryGrid}
-      />
+      {galleryData.length === 0 && !isLoading ? (
+        <View style={styles.emptyContainer}>
+          <IconSymbol name="photo" size={48} color={theme.colors.secondaryText} />
+          <Text style={[styles.emptyTitle, { color: theme.colors.primaryText }]}>No Images Yet</Text>
+          <Text style={[styles.emptyMessage, { color: theme.colors.secondaryText }]}>
+            Start creating virtual try-on images to see them here
+          </Text>
+        </View>
+      ) : (
+        <>
+          <FlatList
+            data={galleryData}
+            renderItem={renderGalleryItem}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.galleryGrid}
+          />
+          {galleryData.length > 0 && (
+            <View style={styles.helpTextContainer}>
+              <Text style={[styles.helpText, { color: theme.colors.secondaryText }]}>
+                Tap to view • Long press to delete
+              </Text>
+            </View>
+          )}
+        </>
+      )}
 
       {/* Start New Style-Me Button */}
       <View style={[styles.bottomContainer, { paddingBottom: insets.bottom + 90, backgroundColor: theme.colors.background, borderTopColor: theme.colors.border }]}>
@@ -179,7 +200,13 @@ export default function GalleryScreen() {
           <View style={[styles.modalContainer, { backgroundColor: theme.colors.cardBackground }]}>
             <Text style={[styles.modalTitle, { color: theme.colors.primaryText }]}>Gallery Item</Text>
             <Text style={[styles.modalMessage, { color: theme.colors.secondaryText }]}>
-              This is a {selectedItem?.type === 'user' ? 'user photo' : 'clothing item'}. What would you like to do?
+              This is a {
+                selectedItem?.type === 'user' 
+                  ? 'user photo' 
+                  : selectedItem?.type === 'outfit' 
+                  ? 'clothing item'
+                  : 'style-me result'
+              }. What would you like to do?
             </Text>
             
             <View style={styles.modalActions}>
@@ -192,19 +219,41 @@ export default function GalleryScreen() {
                 <Text style={[styles.modalButtonText, { color: theme.colors.primaryText }]}>Cancel</Text>
               </TouchableOpacity>
               
-              <TouchableOpacity
-                style={[styles.modalButton, styles.primaryModalButton]}
-                onPress={() => {
-                  if (selectedItem) {
-                    navigateToStyleMe(selectedItem);
-                  }
-                  setModalVisible(false);
-                }}
-              >
-                <Text style={[styles.modalButtonText, styles.primaryModalButtonText]}>
-                  Use for Style-Me
-                </Text>
-              </TouchableOpacity>
+              {selectedItem?.type === 'result' ? (
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.primaryModalButton]}
+                  onPress={() => {
+                    if (selectedItem) {
+                      router.push({
+                        pathname: '/result',
+                        params: {
+                          imageUri: selectedItem.uri,
+                          isFromGallery: 'true',
+                        },
+                      });
+                    }
+                    setModalVisible(false);
+                  }}
+                >
+                  <Text style={[styles.modalButtonText, styles.primaryModalButtonText]}>
+                    View Result
+                  </Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.primaryModalButton]}
+                  onPress={() => {
+                    if (selectedItem) {
+                      navigateToStyleMe(selectedItem);
+                    }
+                    setModalVisible(false);
+                  }}
+                >
+                  <Text style={[styles.modalButtonText, styles.primaryModalButtonText]}>
+                    Use for Style-Me
+                  </Text>
+                </TouchableOpacity>
+              )}
               
               <TouchableOpacity
                 style={[styles.modalButton, styles.destructiveModalButton]}
@@ -439,5 +488,39 @@ const styles = StyleSheet.create({
   },
   destructiveModalButtonText: {
     color: '#FFFFFF',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyMessage: {
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  helpTextContainer: {
+    position: 'absolute',
+    bottom: 200,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  helpText: {
+    fontSize: 14,
+    textAlign: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.05)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    overflow: 'hidden',
   },
 });
