@@ -18,7 +18,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { storageService, setSetting, getSetting, deleteSetting, clearCache } from '@/services/storage';
-import { openRouterService } from '@/services/openrouter';
+import { useTheme } from '../../components/contexts/ThemeContext';
+import { falService } from '@/services/fal';
 
 interface UserProfile {
   name: string;
@@ -28,10 +29,11 @@ interface UserProfile {
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
-  const [apiKey, setApiKey] = useState('');
-  const [isApiKeyVisible, setIsApiKeyVisible] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'testing'>('disconnected');
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const scrollViewRef = React.useRef<ScrollView>(null);
+  const { theme, isDarkMode, toggleTheme } = useTheme();
+  const [falApiKey, setFalApiKey] = useState('');
+  const [isFalApiKeyVisible, setIsFalApiKeyVisible] = useState(false);
+  const [falConnectionStatus, setFalConnectionStatus] = useState<'connected' | 'disconnected' | 'testing'>('disconnected');
   const [userProfile, setUserProfile] = useState<UserProfile>({
     name: '',
     email: '',
@@ -52,24 +54,28 @@ export default function SettingsScreen() {
   useFocusEffect(
     React.useCallback(() => {
       loadSettings(); // Reload settings when screen comes into focus
+      
+      // Scroll down when screen comes into focus
+      setTimeout(() => {
+        scrollViewRef.current?.scrollTo({ y: 200, animated: true });
+      }, 300);
     }, [])
   );
 
   const loadSettings = async () => {
     try {
-      const savedApiKey = await openRouterService.getApiKeyFromStorage();
-      const savedDarkMode = await getSetting('dark_mode');
+      const savedFalApiKey = await falService.getApiKeyFromStorage();
       const savedProfile = await storageService.getUserProfile();
-      
-      if (savedApiKey) {
-        setApiKey(savedApiKey);
-        // Test connection to verify if key is still valid
-        const connectionTest = await openRouterService.testConnection();
-        setConnectionStatus(connectionTest.success ? 'connected' : 'disconnected');
+
+      if (savedFalApiKey) {
+        setFalApiKey(savedFalApiKey);
+        // Test fal.ai connection
+        const falConnectionTest = await falService.testConnection();
+        setFalConnectionStatus(falConnectionTest.success ? 'connected' : 'disconnected');
       } else {
-        setConnectionStatus('disconnected');
+        setFalConnectionStatus('disconnected');
       }
-      if (savedDarkMode !== null) setIsDarkMode(savedDarkMode);
+      
       if (savedProfile) setUserProfile(savedProfile);
       
     } catch (error) {
@@ -77,53 +83,50 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleApiKeyChange = async (text: string) => {
+
+  const handleFalApiKeyChange = async (text: string) => {
     try {
-      await openRouterService.setApiKey(text);
+      await falService.setApiKey(text);
       // Reset connection status when key changes
-      setConnectionStatus('disconnected');
+      setFalConnectionStatus('disconnected');
     } catch (error) {
       // Silent fail for API key saving
     }
   };
 
-  const handleApiKeyInput = (text: string) => {
-    setApiKey(text);
+  const handleFalApiKeyInput = (text: string) => {
+    setFalApiKey(text);
     // Save immediately as user types (with debounce would be better in production)
-    handleApiKeyChange(text);
+    handleFalApiKeyChange(text);
   };
 
   const toggleDarkMode = async (value: boolean) => {
-    setIsDarkMode(value);
-    try {
-      await setSetting('dark_mode', value);
-    } catch (error) {
-      // Silent fail for dark mode setting
-    }
+    toggleTheme(); // This will handle the state and storage automatically
   };
 
-  const testConnection = async () => {
-    if (!apiKey.trim()) {
-      showErrorModal('Error', 'Please enter your API key first');
+
+  const testFalConnection = async () => {
+    if (!falApiKey.trim()) {
+      showErrorModal('Error', 'Please enter your fal.ai API key first');
       return;
     }
 
-    setConnectionStatus('testing');
+    setFalConnectionStatus('testing');
     
     try {
-      const result = await openRouterService.testConnection();
+      const result = await falService.testConnection();
       
       if (result.success) {
-        setConnectionStatus('connected');
-        showErrorModal('Success', 'API connection successful!');
+        setFalConnectionStatus('connected');
+        showErrorModal('Success', 'Fal.ai API connection successful!');
         // Save last successful test timestamp
-        await setSetting('last_api_test', Date.now());
+        await setSetting('last_fal_api_test', Date.now());
       } else {
-        setConnectionStatus('disconnected');
-        showErrorModal('Connection Failed', result.error || 'Failed to connect to API. Please check your key.');
+        setFalConnectionStatus('disconnected');
+        showErrorModal('Connection Failed', result.error || 'Failed to connect to fal.ai API. Please check your key.');
       }
     } catch (error) {
-      setConnectionStatus('disconnected');
+      setFalConnectionStatus('disconnected');
       showErrorModal('Error', 'Network error occurred. Please try again.');
     }
   };
@@ -143,18 +146,19 @@ export default function SettingsScreen() {
     );
   };
 
-  const deleteApiKey = () => {
+
+  const deleteFalApiKey = () => {
     showConfirmModal(
-      'Delete API Key',
-      'This will remove your stored API key. Continue?',
+      'Delete Fal.ai API Key',
+      'This will remove your stored fal.ai API key. Continue?',
       async () => {
         try {
-          await openRouterService.clearApiKey();
-          setApiKey('');
-          setConnectionStatus('disconnected');
-          showErrorModal('Success', 'API key deleted');
+          await falService.clearApiKey();
+          setFalApiKey('');
+          setFalConnectionStatus('disconnected');
+          showErrorModal('Success', 'Fal.ai API key deleted');
         } catch (error) {
-          showErrorModal('Error', 'Failed to delete API key');
+          showErrorModal('Error', 'Failed to delete fal.ai API key');
         }
       }
     );
@@ -183,28 +187,38 @@ export default function SettingsScreen() {
     setConfirmModalVisible(true);
   };
 
-  const maskedApiKey = apiKey ? '•'.repeat(Math.min(apiKey.length, 16)) : '';
+  const maskedFalApiKey = falApiKey ? '•'.repeat(Math.min(falApiKey.length, 16)) : '';
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { marginTop: Math.max(insets.top + 8, 16) }]}>
+      <View style={[styles.header, { paddingTop: insets.top + 16, borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: theme.colors.surfaceSecondary }]}
           onPress={() => router.back()}
         >
-          <IconSymbol name="chevron.left" size={24} color="#000" />
+          <IconSymbol name="chevron.left" size={24} color={theme.colors.primaryText} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.primaryText }]}>Settings</Text>
         <View style={styles.headerSpacer} />
       </View>
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.scrollView} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingTop: 20 }}
+      >
         {/* Account Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>ACCOUNT</Text>
+        <View style={[styles.section, { backgroundColor: theme.colors.cardBackground }]}>
+          <View style={styles.sectionHeaderWithIcon}>
+            <Text style={[styles.sectionHeader, { color: theme.colors.secondaryText }]}>ACCOUNT</Text>
+            <TouchableOpacity style={[styles.settingsIcon, { backgroundColor: theme.colors.surfaceSecondary }]} onPress={editProfile}>
+              <IconSymbol name="gearshape" size={16} color={theme.colors.secondaryText} />
+            </TouchableOpacity>
+          </View>
           
-          <View style={styles.profileContainer}>
+          <View style={styles.centeredProfileContainer}>
             <View style={styles.profileImageContainer}>
               <Image
                 source={{ uri: userProfile.profileImage }}
@@ -212,113 +226,119 @@ export default function SettingsScreen() {
                 contentFit="cover"
               />
               <View style={styles.editBadge}>
-                <IconSymbol name="pencil" size={12} color="#000" />
+                <IconSymbol name="pencil" size={10} color="#FFF" />
               </View>
             </View>
-            <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{userProfile.name}</Text>
-              <Text style={styles.profileEmail}>{userProfile.email}</Text>
+            <View style={styles.centeredProfileInfo}>
+              <Text style={[styles.profileName, { color: theme.colors.primaryText }]}>{userProfile.name}</Text>
+              <Text style={[styles.profileEmail, { color: theme.colors.secondaryText }]}>{userProfile.email}</Text>
             </View>
           </View>
-
-          <TouchableOpacity style={styles.settingItem} onPress={editProfile}>
-            <Text style={styles.settingLabel}>Edit Profile</Text>
-            <IconSymbol name="chevron.right" size={16} color="#999" />
-          </TouchableOpacity>
         </View>
 
+
         {/* API Configuration Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>API CONFIGURATION</Text>
+        <View style={[styles.section, { backgroundColor: theme.colors.cardBackground }]}>
+          <Text style={[styles.sectionHeader, { color: theme.colors.secondaryText }]}>API CONFIGURATION</Text>
           
-          <Text style={styles.settingLabel}>OpenRouter API Key</Text>
+          <Text style={[styles.settingLabel, { color: theme.colors.primaryText }]}>Fal.ai API Key</Text>
           
-          <View style={styles.apiKeyContainer}>
+          <View style={[styles.apiKeyContainer, { backgroundColor: theme.colors.surfaceSecondary, borderColor: theme.colors.border }]}>
             <TextInput
-              style={styles.apiKeyInput}
-              value={isApiKeyVisible ? apiKey : maskedApiKey}
-              onChangeText={handleApiKeyInput}
-              placeholder="Enter your API key"
-              secureTextEntry={!isApiKeyVisible}
+              style={[styles.apiKeyInput, { color: theme.colors.primaryText }]}
+              value={isFalApiKeyVisible ? falApiKey : maskedFalApiKey}
+              onChangeText={handleFalApiKeyInput}
+              placeholder="Enter your fal.ai API key"
+              placeholderTextColor={theme.colors.secondaryText}
+              secureTextEntry={!isFalApiKeyVisible}
               autoCapitalize="none"
               autoCorrect={false}
             />
             <TouchableOpacity 
               style={styles.eyeButton}
-              onPress={() => setIsApiKeyVisible(!isApiKeyVisible)}
+              onPress={() => setIsFalApiKeyVisible(!isFalApiKeyVisible)}
             >
               <IconSymbol 
-                name={isApiKeyVisible ? "eye.slash" : "eye"} 
+                name={isFalApiKeyVisible ? "eye.slash" : "eye"} 
                 size={20} 
-                color="#666" 
+                color={theme.colors.secondaryText} 
               />
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity 
-            style={styles.testConnectionButton}
-            onPress={() => testConnection()}
-            disabled={connectionStatus === 'testing'}
+            style={[
+              styles.testConnectionButton, 
+              { 
+                backgroundColor: theme.colors.surface, 
+                borderColor: theme.colors.border 
+              }
+            ]}
+            onPress={() => testFalConnection()}
+            disabled={falConnectionStatus === 'testing'}
           >
-            <Text style={styles.testConnectionText}>
-              {connectionStatus === 'testing' ? 'Testing...' : 'Test Connection'}
+            <Text style={[styles.testConnectionText, { color: theme.colors.primaryText }]}>
+              {falConnectionStatus === 'testing' ? 'Testing...' : 'Fal.ai Connection'}
             </Text>
             <View style={[
               styles.connectionStatus,
-              connectionStatus === 'connected' && styles.connectedStatus
+              { backgroundColor: 'transparent' }
             ]}>
               <IconSymbol 
-                name={connectionStatus === 'connected' ? "checkmark.circle.fill" : "xmark.circle.fill"} 
+                name={falConnectionStatus === 'connected' ? "checkmark.circle.fill" : "xmark.circle.fill"} 
                 size={16} 
-                color={connectionStatus === 'connected' ? "#4CAF50" : "#F44336"} 
+                color={falConnectionStatus === 'connected' ? theme.colors.success : theme.colors.error} 
               />
               <Text style={[
                 styles.connectionText,
-                connectionStatus === 'connected' && styles.connectedText
+                { 
+                  color: falConnectionStatus === 'connected' ? theme.colors.success : theme.colors.error 
+                }
               ]}>
-                {connectionStatus === 'connected' ? 'Connected' : 'Disconnected'}
+                {falConnectionStatus === 'connected' ? 'Connected' : 'Disconnected'}
               </Text>
             </View>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.getApiKeyButton} onPress={() => Linking.openURL('https://openrouter.ai/keys')}>
-            <Text style={styles.getApiKeyText}>Get API Key</Text>
-            <IconSymbol name="arrow.up.right.square" size={16} color="#FF9800" />
+          <TouchableOpacity style={[styles.getApiKeyButton, { borderColor: theme.colors.border }]} onPress={() => Linking.openURL('https://fal.ai/dashboard/keys')}>
+            <Text style={[styles.getApiKeyText, { color: theme.colors.buttonBackground }]}>Get Fal.ai API Key</Text>
+            <IconSymbol name="arrow.up.right.square" size={16} color={theme.colors.buttonBackground} />
           </TouchableOpacity>
         </View>
 
         {/* Privacy & Data Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>PRIVACY & DATA</Text>
+        <View style={[styles.section, { backgroundColor: theme.colors.cardBackground }]}>
+          <Text style={[styles.sectionHeader, { color: theme.colors.secondaryText }]}>PRIVACY & DATA</Text>
           
-          <TouchableOpacity style={styles.settingItem} onPress={clearCacheData}>
-            <Text style={styles.settingLabel}>Clear Cache</Text>
-            <IconSymbol name="chevron.right" size={16} color="#999" />
+          <TouchableOpacity style={[styles.settingItem, { borderBottomColor: theme.colors.border }]} onPress={clearCacheData}>
+            <Text style={[styles.settingLabel, { color: theme.colors.primaryText }]}>Clear Cache</Text>
+            <IconSymbol name="trash" size={16} color={theme.colors.error} />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.deleteButton} onPress={deleteApiKey}>
-            <Text style={styles.deleteButtonText}>Delete API Key</Text>
-            <IconSymbol name="trash" size={16} color="#F44336" />
+
+          <TouchableOpacity style={[styles.settingItem, { borderBottomWidth: 0 }]} onPress={deleteFalApiKey}>
+            <Text style={[styles.settingLabel, { color: theme.colors.primaryText }]}>Delete Fal.ai API Key</Text>
+            <IconSymbol name="trash" size={16} color={theme.colors.error} />
           </TouchableOpacity>
         </View>
 
         {/* General Settings Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionHeader}>GENERAL SETTINGS</Text>
+        <View style={[styles.section, { backgroundColor: theme.colors.cardBackground }]}>
+          <Text style={[styles.sectionHeader, { color: theme.colors.secondaryText }]}>GENERAL SETTINGS</Text>
           
-          <View style={styles.settingItem}>
-            <Text style={styles.settingLabel}>Dark/Light mode</Text>
+          <View style={[styles.settingItem, { borderBottomColor: theme.colors.border }]}>
+            <Text style={[styles.settingLabel, { color: theme.colors.primaryText }]}>Dark/Light mode</Text>
             <Switch
               value={isDarkMode}
               onValueChange={toggleDarkMode}
-              trackColor={{ false: '#E0E0E0', true: '#4CAF50' }}
+              trackColor={{ false: '#39393D', true: theme.colors.buttonBackground }}
               thumbColor={isDarkMode ? '#FFFFFF' : '#FFFFFF'}
             />
           </View>
 
-          <TouchableOpacity style={styles.settingItem} onPress={openNotificationSettings}>
-            <Text style={styles.settingLabel}>Notification preferences</Text>
-            <IconSymbol name="chevron.right" size={16} color="#999" />
+          <TouchableOpacity style={[styles.settingItem, { borderBottomWidth: 0 }]} onPress={openNotificationSettings}>
+            <Text style={[styles.settingLabel, { color: theme.colors.primaryText }]}>Notification preferences</Text>
+            <IconSymbol name="chevron.right" size={16} color={theme.colors.secondaryText} />
           </TouchableOpacity>
         </View>
 
@@ -334,9 +354,9 @@ export default function SettingsScreen() {
         onRequestClose={() => setErrorModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>{errorModalTitle}</Text>
-            <Text style={styles.modalMessage}>{errorModalMessage}</Text>
+          <View style={[styles.modalContainer, { backgroundColor: theme.colors.cardBackground }]}>
+            <Text style={[styles.modalTitle, { color: theme.colors.primaryText }]}>{errorModalTitle}</Text>
+            <Text style={[styles.modalMessage, { color: theme.colors.secondaryText }]}>{errorModalMessage}</Text>
             
             <TouchableOpacity
               style={[styles.modalButton, styles.primaryModalButton]}
@@ -358,19 +378,19 @@ export default function SettingsScreen() {
         onRequestClose={() => setConfirmModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>{confirmModalTitle}</Text>
-            <Text style={styles.modalMessage}>{confirmModalMessage}</Text>
+          <View style={[styles.modalContainer, { backgroundColor: theme.colors.cardBackground }]}>
+            <Text style={[styles.modalTitle, { color: theme.colors.primaryText }]}>{confirmModalTitle}</Text>
+            <Text style={[styles.modalMessage, { color: theme.colors.secondaryText }]}>{confirmModalMessage}</Text>
             
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={styles.modalButton}
+                style={[styles.modalButton, { backgroundColor: theme.colors.surfaceSecondary }]}
                 onPress={() => {
                   setConfirmModalVisible(false);
                   setConfirmAction(null);
                 }}
               >
-                <Text style={styles.modalButtonText}>Cancel</Text>
+                <Text style={[styles.modalButtonText, { color: theme.colors.primaryText }]}>Cancel</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -398,7 +418,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8F9FA',
   },
   header: {
     flexDirection: 'row',
@@ -406,7 +426,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
   },
   backButton: {
     width: 32,
@@ -421,7 +440,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
+    color: '#000000',
   },
   headerSpacer: {
     width: 32,
@@ -431,14 +450,38 @@ const styles = StyleSheet.create({
   },
   section: {
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 24,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
   },
   sectionHeader: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
-    color: '#999',
+    color: '#6B7280',
     marginBottom: 16,
     letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  sectionHeaderWithIcon: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  settingsIcon: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#F3F4F6',
   },
   profileContainer: {
     flexDirection: 'row',
@@ -446,36 +489,44 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     marginBottom: 16,
   },
+  centeredProfileContainer: {
+    alignItems: 'center',
+    paddingVertical: 4,
+  },
   profileImageContainer: {
     position: 'relative',
     marginRight: 16,
   },
   profileImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: '#F5F5F5',
   },
   editBadge: {
     position: 'absolute',
     bottom: 0,
     right: 0,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#FFFF00',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#000000',
     justifyContent: 'center',
     alignItems: 'center',
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: '#FFFFFF',
   },
   profileInfo: {
     flex: 1,
   },
+  centeredProfileInfo: {
+    alignItems: 'center',
+    marginTop: 6,
+  },
   profileName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: '#000000',
     marginBottom: 4,
   },
   profileEmail: {
@@ -488,11 +539,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+    borderBottomColor: '#F3F4F6',
   },
   settingLabel: {
     fontSize: 16,
-    color: '#000',
+    color: '#000000',
     fontWeight: '400',
   },
   apiKeyContainer: {
@@ -508,7 +559,7 @@ const styles = StyleSheet.create({
   apiKeyInput: {
     flex: 1,
     fontSize: 16,
-    color: '#000',
+    color: '#000000',
     fontFamily: 'monospace',
   },
   eyeButton: {
@@ -523,7 +574,7 @@ const styles = StyleSheet.create({
   },
   testConnectionText: {
     fontSize: 16,
-    color: '#000',
+    color: '#000000',
   },
   connectionStatus: {
     flexDirection: 'row',
@@ -539,7 +590,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   connectedText: {
-    color: '#4CAF50',
+    color: '#10B981',
   },
   getApiKeyButton: {
     flexDirection: 'row',
@@ -549,7 +600,7 @@ const styles = StyleSheet.create({
   },
   getApiKeyText: {
     fontSize: 16,
-    color: '#FF9800',
+    color: '#6B7280',
     fontWeight: '500',
   },
   deleteButton: {
@@ -562,11 +613,11 @@ const styles = StyleSheet.create({
   },
   deleteButtonText: {
     fontSize: 16,
-    color: '#F44336',
+    color: '#6B7280',
     fontWeight: '400',
   },
   bottomSpacing: {
-    height: 100,
+    height: 160,
   },
   // Modal styles
   modalOverlay: {

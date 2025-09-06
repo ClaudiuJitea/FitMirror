@@ -30,7 +30,7 @@
 
 ### **Core Functionality**
 - **Dual-Mode Camera**: Capture user photos and clothing items with intuitive interface
-- **AI-Powered Try-On**: Generate realistic virtual try-on results using OpenRouter API
+- **AI-Powered Try-On**: Generate realistic virtual try-on results using Fal.ai API
 - **Smart Gallery**: Organize and manage captured images with categorized view
 - **Local Storage**: Save and share results with seamless device integration
 
@@ -58,6 +58,9 @@
 - npm or yarn
 - Expo CLI
 - iOS Simulator or Android Emulator
+
+# Required API Keys
+- Fal.ai API key (for virtual try-on functionality)
 ```
 
 ### Installation
@@ -78,9 +81,11 @@
    cp .env.example .env
    ```
    
-   Edit `.env` and add your OpenRouter API key:
+   Edit `.env` and add your API key:
    ```env
-   EXPO_PUBLIC_OPENROUTER_API_KEY=your_api_key_here
+   # Fal.ai API for virtual try-on (required, set in app settings)
+   FAL_API_KEY=your_fal_api_key_here
+   
    EXPO_PUBLIC_APP_NAME=FitMirror
    EXPO_PUBLIC_APP_VERSION=1.0.0
    ```
@@ -113,7 +118,8 @@ FitMirror/
 │   ├── edit-profile.tsx      # User profile management
 │   └── _layout.tsx           # Root navigation layout
 ├── services/
-│   ├── openrouter.ts         # AI API integration
+│   ├── fal.ts                # Fal.ai API integration
+│   ├── openrouter.ts         # OpenRouter API integration
 │   └── storage.ts            # Local data management
 ├── components/               # Reusable UI components
 ├── assets/                   # Images, icons, fonts
@@ -125,7 +131,7 @@ FitMirror/
 - **Navigation**: Expo Router (file-based routing)
 - **UI Framework**: Native components with custom styling
 - **Image Processing**: Expo Image, Image Manipulator
-- **AI Integration**: OpenRouter API with Gemini Flash
+- **AI Integration**: Fal.ai for virtual try-on generation
 - **Storage**: AsyncStorage, Expo FileSystem
 - **Camera**: Expo Camera, Image Picker
 - **Icons**: SF Symbols (iOS) / Material Icons (Android)
@@ -134,19 +140,25 @@ FitMirror/
 
 ## AI Integration
 
-FitMirror leverages the **OpenRouter API** with **Google Gemini Flash** for realistic virtual try-on generation:
+FitMirror uses **Fal.ai** for realistic virtual try-on generation:
 
 ### Features
-- **Multi-Model Support**: Gemini 2.5 Flash for high-quality results
+- **Virtual Try-On**: Fal.ai nano-banana model for realistic clothing fitting
 - **Prompt Engineering**: Optimized prompts for fashion try-on scenarios
 - **Error Handling**: Robust fallback mechanisms and retry logic
 - **Rate Limiting**: Built-in request throttling and queue management
 
 ### API Configuration
-1. Sign up at [OpenRouter](https://openrouter.ai/)
-2. Generate your API key
-3. Add to environment variables
-4. Test connection in app settings
+
+**Option 1: Configure via App Settings (Recommended)**
+1. Launch the app and go to Settings tab
+2. Enter your Fal.ai API key (get one at [fal.ai/dashboard/keys](https://fal.ai/dashboard/keys))
+3. Test connection using the "Test API Connection" button
+
+**Option 2: Environment Variables**
+1. Sign up at [Fal.ai](https://fal.ai/dashboard/keys) for virtual try-on API
+2. Add key to `.env` file (see installation steps above)
+3. Restart the development server
 
 ---
 
@@ -215,10 +227,10 @@ npm run typecheck             # TypeScript validation
 
 ### Environment Variables
 ```env
-# Required
-EXPO_PUBLIC_OPENROUTER_API_KEY=sk-or-v1-...
+# Required for virtual try-on (can also be set in app settings)
+FAL_API_KEY=your_fal_api_key_here
 
-# Optional Customization
+# App Configuration
 EXPO_PUBLIC_APP_NAME=FitMirror
 EXPO_PUBLIC_APP_VERSION=1.0.0
 ```
@@ -248,10 +260,11 @@ Key settings in `app.json`:
 - Restart the app if camera appears frozen
 
 **API Connection Failed**
-- Verify OpenRouter API key is valid and active
+- Verify Fal.ai API key is valid and active
 - Check network connectivity and firewall settings
 - Review API usage limits and billing status
-- Test with sample requests first
+- Test connection using the "Test API Connection" button in Settings
+- Ensure API key is properly entered (no extra spaces or characters)
 
 **App Performance Issues**
 - Clear app cache in settings
@@ -322,8 +335,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ### Powered By
 - **[Expo](https://expo.dev/)** - Universal React development platform
-- **[OpenRouter](https://openrouter.ai/)** - AI model access and management
-- **[Google Gemini](https://deepmind.google/technologies/gemini/)** - Advanced AI image generation
+- **[Fal.ai](https://fal.ai/)** - AI-powered virtual try-on technology
 
 ### Design Inspiration
 - **[SF Symbols](https://developer.apple.com/sf-symbols/)** - Beautiful iconography
@@ -344,7 +356,7 @@ Create an issue on [GitHub Issues](https://github.com/ClaudiuJitea/FitMirror/iss
 ### **Additional Resources**
 - [Expo Documentation](https://docs.expo.dev/)
 - [React Native Docs](https://reactnative.dev/docs/getting-started)
-- [OpenRouter API Reference](https://openrouter.ai/docs)
+- [Fal.ai Documentation](https://fal.ai/docs)
 
 ---
 

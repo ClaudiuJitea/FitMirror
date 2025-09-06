@@ -15,17 +15,20 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { openRouterService } from '@/services/openrouter';
+import { falService } from '@/services/fal';
 import { saveToGallery } from '@/services/storage';
+import { useTheme } from '../components/contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
 export default function ProcessingScreen() {
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
   const [isProcessing, setIsProcessing] = useState(false);
   const [userImage, setUserImage] = useState<string | null>(null);
   const [outfitImage, setOutfitImage] = useState<string | null>(null);
-  const [tryOnResult, setTryOnResult] = useState<string | null>(null);
+  const [styleMeResult, setStyleMeResult] = useState<string | null>(null);
   const [expandedSection, setExpandedSection] = useState<'user' | 'outfit' | null>(null);
   const previousParams = useRef<any>(null);
 
@@ -77,11 +80,11 @@ export default function ProcessingScreen() {
     }
   }, [params.imageUri, params.mode, params.userImageUri, params.outfitImageUri]);
 
-  const generateTryOn = async () => {
+  const generateStyleMe = async () => {
     if (!userImage || !outfitImage) {
       Alert.alert(
         'Missing Images',
-        'Please capture both your photo and the outfit piece to generate a try-on.',
+        'Please capture both your photo and the outfit piece to generate a style-me.',
         [
           { text: 'OK', onPress: () => router.back() }
         ]
@@ -92,11 +95,8 @@ export default function ProcessingScreen() {
     setIsProcessing(true);
 
     try {
-      // Import OpenRouter service
-      const { openRouterService } = await import('../services/openrouter');
-      
-      // Generate try-on using OpenRouter API
-      const response = await openRouterService.generateTryOnWithRetry({
+      // Generate style-me using fal.ai nano-banana model
+      const response = await falService.generateStyleMeWithRetry({
         userImageUri: userImage,
         clothingImageUri: outfitImage,
         clothingType: 'top', // Could be determined by image analysis
@@ -104,7 +104,7 @@ export default function ProcessingScreen() {
       });
 
       if (response.success && response.imageUrl) {
-        setTryOnResult(response.imageUrl);
+        setStyleMeResult(response.imageUrl);
         
         // Save the result image to gallery
         try {
@@ -123,14 +123,17 @@ export default function ProcessingScreen() {
           },
         });
       } else {
-        Alert.alert('Error', 'Failed to generate try-on result');
+        console.error('Fal.ai response error:', response.error);
+        Alert.alert('Error', `Failed to generate style-me result: ${response.error || 'Unknown error'}`);
       }
     } catch (error) {
+      console.error('Generation error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate style-me. Please try again.';
       Alert.alert(
         'Generation Failed', 
-        error instanceof Error ? error.message : 'Failed to generate try-on. Please try again.',
+        errorMessage,
         [
-          { text: 'Retry', onPress: () => generateTryOn() },
+          { text: 'Retry', onPress: () => generateStyleMe() },
           { text: 'Cancel', style: 'cancel' }
         ]
       );
@@ -158,16 +161,16 @@ export default function ProcessingScreen() {
 
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { marginTop: Math.max(insets.top + 8, 16) }]}>
+      <View style={[styles.header, { marginTop: Math.max(insets.top + 8, 16), backgroundColor: theme.colors.cardBackground }]}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: theme.colors.surfaceSecondary }]}
           onPress={() => router.back()}
         >
-          <IconSymbol name="chevron.left" size={24} color="#000" />
+          <IconSymbol name="chevron.left" size={24} color={theme.colors.primaryText} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Try-On</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.primaryText }]}>Style-Me</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -178,6 +181,7 @@ export default function ProcessingScreen() {
           <TouchableOpacity 
             style={[
               styles.imageContainer,
+              { backgroundColor: theme.colors.cardBackground },
               expandedSection === 'user' && styles.expandedContainer
             ]}
             onPress={() => toggleSection('user')}
@@ -191,15 +195,15 @@ export default function ProcessingScreen() {
                 />
             ) : (
                 <TouchableOpacity 
-                  style={styles.placeholderContainer}
+                  style={[styles.placeholderContainer, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}
                   onPress={selectMissingImage}
                 >
-                  <IconSymbol name="person" size={60} color="#666666" />
-                  <Text style={styles.placeholderText}>Add Your Photo</Text>
+                  <IconSymbol name="person" size={60} color={theme.colors.secondaryText} />
+                  <Text style={[styles.placeholderText, { color: theme.colors.secondaryText }]}>Add Your Photo</Text>
                 </TouchableOpacity>
             )}
-            <View style={styles.imageLabel}>
-              <Text style={styles.imageLabelText}>Your Look</Text>
+            <View style={[styles.imageLabel, { backgroundColor: theme.colors.surface }]}>
+              <Text style={[styles.imageLabelText, { color: theme.colors.primaryText }]}>Your Look</Text>
             </View>
           </TouchableOpacity>
         )}
@@ -209,6 +213,7 @@ export default function ProcessingScreen() {
           <TouchableOpacity 
             style={[
               styles.imageContainer,
+              { backgroundColor: theme.colors.cardBackground },
               expandedSection === 'outfit' && styles.expandedContainer
             ]}
             onPress={() => toggleSection('outfit')}
@@ -222,37 +227,38 @@ export default function ProcessingScreen() {
                 />
             ) : (
                 <TouchableOpacity 
-                  style={styles.placeholderContainer}
+                  style={[styles.placeholderContainer, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}
                   onPress={selectMissingImage}
                 >
-                  <IconSymbol name="tshirt" size={60} color="#666666" />
-                  <Text style={styles.placeholderText}>Add Outfit Piece</Text>
+                  <IconSymbol name="tshirt" size={60} color={theme.colors.secondaryText} />
+                  <Text style={[styles.placeholderText, { color: theme.colors.secondaryText }]}>Add Outfit Piece</Text>
                 </TouchableOpacity>
             )}
-            <View style={styles.imageLabel}>
-              <Text style={styles.imageLabelText}>Your Item</Text>
+            <View style={[styles.imageLabel, { backgroundColor: theme.colors.surface }]}>
+              <Text style={[styles.imageLabelText, { color: theme.colors.primaryText }]}>Your Item</Text>
             </View>
           </TouchableOpacity>
         )}
       </View>
 
       {/* Generate Button */}
-      <View style={[styles.buttonContainer, { paddingBottom: Math.max(insets.bottom, 24) }]}>
+      <View style={[styles.buttonContainer, { paddingBottom: Math.max(insets.bottom + 80, 104) }]}>
         <TouchableOpacity
           style={[
             styles.generateButton,
+            { backgroundColor: theme.colors.buttonBackground },
             (!userImage || !outfitImage || isProcessing) && styles.disabledButton
           ]}
-          onPress={generateTryOn}
+          onPress={generateStyleMe}
           disabled={!userImage || !outfitImage || isProcessing}
         >
           {isProcessing ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator color="#FFFFFF" size="small" />
-              <Text style={styles.buttonText}>Processing...</Text>
+              <ActivityIndicator color={theme.colors.buttonText} size="small" />
+              <Text style={[styles.buttonText, { color: theme.colors.buttonText }]}>Processing...</Text>
             </View>
           ) : (
-            <Text style={styles.buttonText}>Generate Try-On</Text>
+            <Text style={[styles.buttonText, { color: theme.colors.buttonText }]}>Generate Style-Me</Text>
           )}
         </TouchableOpacity>
 
@@ -264,7 +270,6 @@ export default function ProcessingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   header: {
     flexDirection: 'row',
@@ -273,7 +278,6 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     marginHorizontal: 20,
     marginTop: 8,
-    backgroundColor: '#FFFFFF',
     borderRadius: 16,
     borderBottomWidth: 0,
     shadowColor: '#000',
@@ -294,7 +298,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#F8F9FA',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -311,7 +314,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
   },
   headerSpacer: {
     width: 32,
@@ -327,7 +329,6 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: '#F8F9FA',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -355,9 +356,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
     borderWidth: 2,
-    borderColor: '#E8EAED',
     borderStyle: 'dashed',
     borderRadius: 16,
     margin: 8,
@@ -373,14 +372,12 @@ const styles = StyleSheet.create({
   placeholderText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#333333',
     textAlign: 'center',
     fontWeight: '600',
     letterSpacing: 0.5,
     fontFamily: Platform.OS === 'ios' ? 'Helvetica Neue' : 'Roboto',
   },
   imageLabel: {
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
     paddingVertical: 12,
     paddingHorizontal: 16,
     alignItems: 'center',
@@ -388,7 +385,6 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
   },
   imageLabelText: {
-    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
   },
@@ -397,7 +393,6 @@ const styles = StyleSheet.create({
     paddingVertical: 24,
   },
   generateButton: {
-    backgroundColor: '#000000',
     paddingVertical: 18,
     borderRadius: 28,
     alignItems: 'center',
@@ -415,7 +410,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#CCCCCC',
   },
   buttonText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },

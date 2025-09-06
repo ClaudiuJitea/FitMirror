@@ -10,12 +10,14 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Image } from 'expo-image';
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { storageService } from '@/services/storage';
+import { useTheme } from '../components/contexts/ThemeContext';
 
 interface UserProfile {
   name: string;
@@ -25,6 +27,7 @@ interface UserProfile {
 
 export default function EditProfileScreen() {
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [profileImage, setProfileImage] = useState<string | undefined>();
@@ -32,6 +35,7 @@ export default function EditProfileScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [nameError, setNameError] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   useEffect(() => {
     loadProfile();
@@ -101,16 +105,7 @@ export default function EditProfileScreen() {
       };
 
       await storageService.setUserProfile(updatedProfile);
-      Alert.alert(
-        'Success',
-        'Profile updated successfully!',
-        [
-          {
-            text: 'OK',
-            onPress: () => router.back(),
-          },
-        ]
-      );
+      setShowSuccessModal(true);
     } catch (error) {
       Alert.alert('Error', 'Failed to save profile. Please try again.');
     } finally {
@@ -134,16 +129,16 @@ export default function EditProfileScreen() {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading profile...</Text>
+          <Text style={[styles.loadingText, { color: theme.colors.primaryText }]}>Loading profile...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <KeyboardAvoidingView 
         style={styles.keyboardContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -153,78 +148,129 @@ export default function EditProfileScreen() {
           style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingTop: 20 }}
+          contentContainerStyle={{ paddingTop: 10, paddingBottom: 120 }}
         >
           {/* Profile Image Section */}
-          <View style={styles.imageSection}>
+          <View style={[styles.imageSection, { backgroundColor: theme.colors.cardBackground }]}>
             <View style={styles.profileImageContainer}>
               <Image
                 source={{ uri: profileImage }}
-                style={styles.profileImage}
+                style={[styles.profileImage, { backgroundColor: theme.colors.surfaceSecondary }]}
                 contentFit="cover"
               />
-              <TouchableOpacity style={styles.changeImageButton}>
-                <IconSymbol name="pencil" size={16} color="#000" />
+              <TouchableOpacity style={[styles.changeImageButton, { backgroundColor: theme.colors.buttonBackground, borderColor: theme.colors.cardBackground }]}>
+                <IconSymbol name="pencil" size={16} color={theme.colors.buttonText} />
               </TouchableOpacity>
             </View>
-            <Text style={styles.changeImageText}>Tap to change photo</Text>
+            <Text style={[styles.changeImageText, { color: theme.colors.secondaryText }]}>Tap to change photo</Text>
           </View>
 
           {/* Form Section */}
-          <View style={styles.formSection}>
+          <View style={[styles.formSection, { backgroundColor: theme.colors.cardBackground }]}>
             {/* Name Field */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Name</Text>
+              <Text style={[styles.fieldLabel, { color: theme.colors.primaryText }]}>Name</Text>
               <TextInput
-                style={[styles.textInput, nameError && styles.textInputError]}
+                style={[
+                  styles.textInput, 
+                  { 
+                    backgroundColor: theme.colors.surfaceSecondary, 
+                    color: theme.colors.primaryText, 
+                    borderColor: theme.colors.border 
+                  },
+                  nameError && styles.textInputError
+                ]}
                 value={name}
                 onChangeText={handleNameChange}
                 placeholder="Enter your name"
-                placeholderTextColor="#999"
+                placeholderTextColor={theme.colors.secondaryText}
                 autoCapitalize="words"
                 returnKeyType="next"
               />
-              {nameError ? <Text style={styles.errorText}>{nameError}</Text> : null}
+              {nameError ? <Text style={[styles.errorText, { color: theme.colors.error }]}>{nameError}</Text> : null}
             </View>
 
             {/* Email Field */}
             <View style={styles.fieldContainer}>
-              <Text style={styles.fieldLabel}>Email Address</Text>
+              <Text style={[styles.fieldLabel, { color: theme.colors.primaryText }]}>Email Address</Text>
               <TextInput
-                style={[styles.textInput, emailError && styles.textInputError]}
+                style={[
+                  styles.textInput, 
+                  { 
+                    backgroundColor: theme.colors.surfaceSecondary, 
+                    color: theme.colors.primaryText, 
+                    borderColor: theme.colors.border 
+                  },
+                  emailError && styles.textInputError
+                ]}
                 value={email}
                 onChangeText={handleEmailChange}
                 placeholder="Enter your email"
-                placeholderTextColor="#999"
+                placeholderTextColor={theme.colors.secondaryText}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
                 returnKeyType="done"
                 onSubmitEditing={handleSave}
               />
-              {emailError ? <Text style={styles.errorText}>{emailError}</Text> : null}
+              {emailError ? <Text style={[styles.errorText, { color: theme.colors.error }]}>{emailError}</Text> : null}
             </View>
 
             {/* Save Button */}
             <TouchableOpacity
-              style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+              style={[
+                styles.saveButton, 
+                { backgroundColor: theme.colors.buttonBackground },
+                isSaving && styles.saveButtonDisabled
+              ]}
               onPress={handleSave}
               disabled={isSaving}
             >
-              <Text style={[styles.saveButtonText, isSaving && styles.saveButtonTextDisabled]}>
+              <Text style={[
+                styles.saveButtonText, 
+                { color: theme.colors.buttonText },
+                isSaving && styles.saveButtonTextDisabled
+              ]}>
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </Text>
             </TouchableOpacity>
 
             {/* Help Text */}
-            <View style={styles.helpSection}>
-              <Text style={styles.helpText}>
+            <View style={[styles.helpSection, { borderTopColor: theme.colors.border }]}>
+              <Text style={[styles.helpText, { color: theme.colors.secondaryText }]}>
                 This information is stored locally on your device and is only used to personalize your experience.
               </Text>
             </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Success Modal */}
+      <Modal
+        visible={showSuccessModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowSuccessModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.successModal, { backgroundColor: theme.colors.cardBackground }]}>
+            <View style={styles.successIcon}>
+              <IconSymbol name="checkmark.circle.fill" size={24} color="#10B981" />
+            </View>
+            <Text style={[styles.successTitle, { color: theme.colors.primaryText }]}>Success</Text>
+            <Text style={[styles.successMessage, { color: theme.colors.secondaryText }]}>Profile updated successfully!</Text>
+            <TouchableOpacity
+              style={[styles.successButton, { backgroundColor: theme.colors.buttonBackground }]}
+              onPress={() => {
+                setShowSuccessModal(false);
+                router.back();
+              }}
+            >
+              <Text style={[styles.successButtonText, { color: theme.colors.buttonText }]}>OK</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -232,13 +278,11 @@ export default function EditProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
   },
   keyboardContainer: {
     flex: 1,
   },
   saveButton: {
-    backgroundColor: '#000000',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -248,7 +292,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#CCCCCC',
   },
   saveButtonText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -257,7 +300,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    paddingTop: 20,
   },
   loadingContainer: {
     flex: 1,
@@ -266,14 +308,12 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#666',
   },
   imageSection: {
     alignItems: 'center',
     paddingVertical: 32,
     marginHorizontal: 20,
     marginBottom: 20,
-    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     shadowColor: '#000',
     shadowOffset: {
@@ -292,7 +332,6 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#F5F5F5',
   },
   changeImageButton: {
     position: 'absolute',
@@ -301,11 +340,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#FFFF00',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
-    borderColor: '#FFFFFF',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -317,12 +354,10 @@ const styles = StyleSheet.create({
   },
   changeImageText: {
     fontSize: 14,
-    color: '#666',
     fontWeight: '500',
   },
   formSection: {
     marginHorizontal: 20,
-    backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 24,
     shadowColor: '#000',
@@ -340,22 +375,17 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
     marginBottom: 8,
   },
   textInput: {
-    backgroundColor: '#F8F9FA',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#000',
     borderWidth: 1,
-    borderColor: '#E8EAED',
   },
   textInputError: {
     borderColor: '#F44336',
-    backgroundColor: '#FFF5F5',
   },
   errorText: {
     fontSize: 14,
@@ -367,12 +397,59 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 20,
     borderTopWidth: 1,
-    borderTopColor: '#F5F5F5',
   },
   helpText: {
     fontSize: 14,
-    color: '#666',
     lineHeight: 20,
     textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  successModal: {
+    borderRadius: 24,
+    paddingVertical: 32,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    minWidth: 280,
+    maxWidth: 320,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 12,
+  },
+  successIcon: {
+    marginBottom: 16,
+  },
+  successTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  successMessage: {
+    fontSize: 16,
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 22,
+  },
+  successButton: {
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  successButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

@@ -49,7 +49,7 @@ class StorageService {
 
   // Gallery operations
   async saveGalleryItem(uri: string, type: 'user' | 'outfit' | 'result'): Promise<string> {
-    const id = Date.now().toString();
+    const id = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     this.data.galleryItems.push({
       id,
       uri,
@@ -88,6 +88,14 @@ class StorageService {
   // Utility operations
   async clearCache(): Promise<void> {
     this.data.galleryItems = this.data.galleryItems.filter(item => item.type !== 'result');
+  }
+
+  async clearMockData(): Promise<void> {
+    // Remove any items with mock IDs or Unsplash URLs
+    this.data.galleryItems = this.data.galleryItems.filter(item => 
+      !item.id.startsWith('mock-') && 
+      !item.uri.includes('unsplash.com')
+    );
   }
 
   async clearAllData(): Promise<void> {
@@ -129,6 +137,7 @@ export const getGalleryItems = (type?: 'user' | 'outfit' | 'result') =>
   storageService.getGalleryItems(type);
 
 export const clearCache = () => storageService.clearCache();
+export const clearMockData = () => storageService.clearMockData();
 export const clearAllData = () => storageService.clearAllData();
 
 // Profile convenience functions

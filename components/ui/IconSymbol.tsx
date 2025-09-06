@@ -38,11 +38,15 @@ const MAPPING = {
   'sparkles': 'auto-awesome',
   'square.and.arrow.up': 'share',
   'square.and.arrow.down': 'file-download',
+  'photo': 'collections',
+  'photo.fill': 'collections',
   'square': 'photo',
   'circle': 'settings',
   'folder': 'folder',
   'grid.circle': 'grid-view',
   'slider.horizontal.3': 'tune',
+  'bolt.slash': 'flash-off',
+  'gearshape': 'settings',
 } as IconMapping;
 
 /**

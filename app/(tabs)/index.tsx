@@ -11,20 +11,25 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Camera, CameraType, CameraView } from 'expo-camera';
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
+import { useTheme } from '../../components/contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
 type CameraMode = 'outfit' | 'look';
 
-export default function TryOnScreen() {
+export default function StyleMeScreen() {
   const params = useLocalSearchParams();
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [cameraMode, setCameraMode] = useState<CameraMode>('outfit');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [cameraFacing, setCameraFacing] = useState<CameraType>('back');
+  const [flashMode, setFlashMode] = useState<'off' | 'on' | 'auto'>('off');
   const cameraRef = useRef<CameraView>(null);
 
   useEffect(() => {
@@ -104,15 +109,49 @@ export default function TryOnScreen() {
     }
   };
 
+  const toggleCamera = () => {
+    setCameraFacing(current => (current === 'back' ? 'front' : 'back'));
+  };
+
+  const toggleFlash = () => {
+    setFlashMode(current => {
+      switch (current) {
+        case 'off': return 'on';
+        case 'on': return 'auto';
+        case 'auto': return 'off';
+        default: return 'off';
+      }
+    });
+  };
+
   const pickFromGallery = async () => {
     try {
+      // Request media library permissions
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert(
+          'Permission Required', 
+          'FitMirror needs access to your photo library to select images for virtual try-on. Please allow access in your device settings.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Open Settings', onPress: () => {
+              // Note: Opening settings programmatically requires additional setup
+              Alert.alert('Settings', 'Please go to Settings > Apps > FitMirror > Permissions to enable photo access.');
+            }}
+          ]
+        );
+        return;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
         quality: 0.8,
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
       });
 
-      if (!result.canceled && result.assets[0]) {
+      console.log('Image picker result:', result);
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
         const imageUri = result.assets[0].uri;
         // Copy to permanent storage
         const permanentUri = await copyImageToPermanentStorage(imageUri);
@@ -145,24 +184,26 @@ export default function TryOnScreen() {
         }
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to select image. Please try again.');
+      console.error('Image picker error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to select image. Please try again.';
+      Alert.alert('Error', errorMessage);
     }
   };
 
   if (hasPermission === null) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.message}>Requesting camera permission...</Text>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <Text style={[styles.message, { color: theme.colors.primaryText }]}>Requesting camera permission...</Text>
       </View>
     );
   }
 
   if (hasPermission === false) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.message}>No access to camera</Text>
-        <TouchableOpacity style={styles.galleryButton} onPress={pickFromGallery}>
-          <Text style={styles.galleryButtonText}>Select from Gallery</Text>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <Text style={[styles.message, { color: theme.colors.primaryText }]}>No access to camera</Text>
+        <TouchableOpacity style={[styles.galleryButton, { backgroundColor: theme.colors.buttonBackground }]} onPress={pickFromGallery}>
+          <Text style={[styles.galleryButtonText, { color: theme.colors.buttonText }]}>Select from Gallery</Text>
         </TouchableOpacity>
       </View>
     );
@@ -174,68 +215,87 @@ export default function TryOnScreen() {
       <CameraView
         ref={cameraRef}
         style={styles.fullscreenCamera}
-        facing="back"
-      >
-        {/* Floating Header */}
-        <View style={[styles.floatingHeader, { paddingTop: insets.top + 20 }]}>
-          <Text style={styles.floatingHeaderText}>
-            {cameraMode === 'outfit' ? 'Snap your outfit piece' : 'Snap your look'}
-          </Text>
-        </View>
+        facing={cameraFacing}
+        flash={flashMode}
+      />
+      
+      {/* Floating Header */}
+      <View style={[styles.floatingHeader, { paddingTop: insets.top + 20 }]}>
+        <Text style={styles.floatingHeaderText}>
+          {cameraMode === 'outfit' ? 'Snap your outfit piece' : 'Snap your look'}
+        </Text>
+      </View>
 
+      {/* Top Camera Controls */}
+      <View style={[styles.topControls, { top: insets.top + 80 }]}>
+        <TouchableOpacity style={styles.controlButton} onPress={toggleFlash}>
+          <IconSymbol 
+            name={flashMode === 'off' ? 'bolt.slash' : flashMode === 'on' ? 'bolt.fill' : 'bolt'} 
+            size={20} 
+            color="#FFF" 
+          />
+          <Text style={styles.controlButtonLabel}>Flash</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.controlButton} onPress={toggleCamera}>
+          <Ionicons name="camera-reverse" size={20} color="#FFF" />
+          <Text style={styles.controlButtonLabel}>Camera</Text>
+        </TouchableOpacity>
+      </View>
 
-        {/* Floating Camera Controls */}
-        <View style={[styles.floatingControls, { bottom: insets.bottom + 120 }]}>
-          {/* Gallery Button */}
-          <TouchableOpacity style={styles.floatingGalleryButton} onPress={pickFromGallery}>
-            <IconSymbol name="photo.stack" size={24} color="#FFF" />
-          </TouchableOpacity>
+      {/* Floating Camera Controls */}
+      <View style={[styles.floatingControls, { bottom: insets.bottom + 180 }]}>
+        {/* Gallery Button */}
+        <TouchableOpacity style={styles.floatingGalleryButton} onPress={pickFromGallery}>
+          <Ionicons name="images" size={20} color="#FFF" />
+          <Text style={styles.galleryButtonText}>Photos</Text>
+        </TouchableOpacity>
 
-          {/* Capture Button */}
-          <TouchableOpacity style={styles.floatingCaptureButton} onPress={takePicture}>
+        {/* Capture Button */}
+        <TouchableOpacity style={styles.floatingCaptureButton} onPress={takePicture}>
+          <View style={styles.captureButtonRing}>
             <View style={styles.captureButtonInner} />
-          </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
 
-          {/* Settings Placeholder */}
-          <View style={styles.floatingSettingsPlaceholder} />
-        </View>
+        {/* Settings Placeholder */}
+        <View style={styles.floatingSettingsPlaceholder} />
+      </View>
 
-        {/* Floating Bottom Toggle */}
-        <View style={[styles.floatingBottomToggle, { bottom: insets.bottom + 40 }]}>
-          <TouchableOpacity
+      {/* Floating Bottom Toggle */}
+      <View style={[styles.floatingBottomToggle, { bottom: insets.bottom + 100 }]}>
+        <TouchableOpacity
+          style={[
+            styles.floatingToggleButton,
+            cameraMode === 'outfit' && styles.activeFloatingToggle,
+          ]}
+          onPress={() => setCameraMode('outfit')}
+        >
+          <Text
             style={[
-              styles.floatingToggleButton,
-              cameraMode === 'outfit' && styles.activeFloatingToggle,
+              styles.floatingToggleText,
+              cameraMode === 'outfit' && styles.activeFloatingToggleText,
             ]}
-            onPress={() => setCameraMode('outfit')}
           >
-            <Text
-              style={[
-                styles.floatingToggleText,
-                cameraMode === 'outfit' && styles.activeFloatingToggleText,
-              ]}
-            >
-              Outfit
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+            Outfit
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.floatingToggleButton,
+            cameraMode === 'look' && styles.activeFloatingToggle,
+          ]}
+          onPress={() => setCameraMode('look')}
+        >
+          <Text
             style={[
-              styles.floatingToggleButton,
-              cameraMode === 'look' && styles.activeFloatingToggle,
+              styles.floatingToggleText,
+              cameraMode === 'look' && styles.activeFloatingToggleText,
             ]}
-            onPress={() => setCameraMode('look')}
           >
-            <Text
-              style={[
-                styles.floatingToggleText,
-                cameraMode === 'look' && styles.activeFloatingToggleText,
-              ]}
-            >
-              Look
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </CameraView>
+            Look
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -262,16 +322,58 @@ const styles = StyleSheet.create({
   floatingHeaderText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: '#000',
     textAlign: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
     overflow: 'hidden',
-    textShadowColor: 'rgba(0, 0, 0, 0.8)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  topControls: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  controlButton: {
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 5,
+    gap: 6,
+  },
+  controlButtonLabel: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+    includeFontPadding: false,
+    letterSpacing: 0.3,
+  },
+  controlButtonIcon: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   centerPlaceholder: {
     position: 'absolute',
@@ -313,9 +415,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   floatingGalleryButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -327,12 +430,31 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 5,
+    gap: 6,
+  },
+  galleryButtonText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+    includeFontPadding: false,
+    letterSpacing: 0.3,
   },
   floatingCaptureButton: {
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  captureButtonRing: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'transparent',
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -345,7 +467,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   floatingSettingsPlaceholder: {
-    width: 50,
+    width: 80,
     height: 50,
   },
   floatingBottomToggle: {
@@ -373,7 +495,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   activeFloatingToggleText: {
-    color: '#000000',
+    color: '#000',
   },
   message: {
     textAlign: 'center',
@@ -409,7 +531,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: '#000',
+    backgroundColor: '#000000',
   },
   camera: {
     flex: 1,
@@ -460,10 +582,10 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   captureButtonInner: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#000',
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#FFFFFF',
   },
   spacer: {
     width: 50,
@@ -491,7 +613,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   activeToggle: {
-    backgroundColor: '#000',
+    backgroundColor: '#000000',
   },
   toggleText: {
     fontSize: 16,
@@ -502,7 +624,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   galleryButton: {
-    backgroundColor: '#000',
+    backgroundColor: '#000000',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,

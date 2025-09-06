@@ -15,7 +15,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { storageService, getGalleryItems } from '@/services/storage';
+import { storageService, getGalleryItems, clearMockData } from '@/services/storage';
+import { useTheme } from '../../components/contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
 const ITEM_SIZE = (width - 60) / 2;
@@ -29,6 +30,7 @@ interface GalleryItem {
 
 export default function GalleryScreen() {
   const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
   const [galleryData, setGalleryData] = useState<GalleryItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<GalleryItem | null>(null);
@@ -43,29 +45,10 @@ export default function GalleryScreen() {
   const loadGalleryData = async () => {
     try {
       setIsLoading(true);
+      // Clear any existing mock data first
+      await clearMockData();
       const items = await getGalleryItems();
-      
-      // Add some mock data for demo if no items exist
-      if (items.length === 0) {
-        const mockItems = [
-          { id: '1', uri: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=300&h=400&fit=crop', type: 'user' as const, timestamp: Date.now() - 86400000 },
-          { id: '2', uri: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=300&h=400&fit=crop', type: 'outfit' as const, timestamp: Date.now() - 172800000 },
-          { id: '3', uri: 'https://images.unsplash.com/photo-1529374255404-311a2a4f1fd9?w=300&h=400&fit=crop', type: 'result' as const, timestamp: Date.now() - 259200000 },
-          { id: '4', uri: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=300&h=400&fit=crop&crop=face', type: 'user' as const, timestamp: Date.now() - 345600000 },
-          { id: '5', uri: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=300&h=400&fit=crop', type: 'outfit' as const, timestamp: Date.now() - 432000000 },
-          { id: '6', uri: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=300&h=400&fit=crop', type: 'result' as const, timestamp: Date.now() - 518400000 },
-        ];
-        
-        // Save mock items to storage for demo
-        for (const item of mockItems) {
-          await storageService.saveGalleryItem(item.uri, item.type);
-        }
-        
-        setGalleryData(mockItems);
-      } else {
-        setGalleryData(items);
-      }
-      
+      setGalleryData(items);
     } catch (error) {
       // Silent fail for gallery data loading
     } finally {
@@ -90,7 +73,7 @@ export default function GalleryScreen() {
     }
   };
 
-  const navigateToTryOn = (item: GalleryItem) => {
+  const navigateToStyleMe = (item: GalleryItem) => {
     router.push({
       pathname: '/processing',
       params: {
@@ -119,7 +102,7 @@ export default function GalleryScreen() {
     }
   };
 
-  const startNewTryOn = () => {
+  const startNewStyleMe = () => {
     router.push('/(tabs)');
   };
 
@@ -151,16 +134,16 @@ export default function GalleryScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+      <View style={[styles.header, { paddingTop: insets.top + 16, borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: theme.colors.surfaceSecondary }]}
           onPress={() => router.back()}
         >
-          <IconSymbol name="chevron.left" size={24} color="#000" />
+          <IconSymbol name="chevron.left" size={24} color={theme.colors.primaryText} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Gallery</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.primaryText }]}>Gallery</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -174,14 +157,14 @@ export default function GalleryScreen() {
         contentContainerStyle={styles.galleryGrid}
       />
 
-      {/* Start New Try-On Button */}
-      <View style={styles.bottomContainer}>
+      {/* Start New Style-Me Button */}
+      <View style={[styles.bottomContainer, { paddingBottom: insets.bottom + 90, backgroundColor: theme.colors.background, borderTopColor: theme.colors.border }]}>
         <TouchableOpacity
-          style={styles.startButton}
-          onPress={startNewTryOn}
+          style={[styles.startButton, { backgroundColor: theme.colors.buttonBackground }]}
+          onPress={startNewStyleMe}
         >
-          <IconSymbol name="plus" size={20} color="#FFFFFF" />
-          <Text style={styles.startButtonText}>Start New Try-On</Text>
+          <IconSymbol name="plus" size={20} color={theme.colors.buttonText} />
+          <Text style={[styles.startButtonText, { color: theme.colors.buttonText }]}>Start New Style-Me</Text>
         </TouchableOpacity>
       </View>
 
@@ -193,33 +176,33 @@ export default function GalleryScreen() {
         onRequestClose={() => setModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Gallery Item</Text>
-            <Text style={styles.modalMessage}>
+          <View style={[styles.modalContainer, { backgroundColor: theme.colors.cardBackground }]}>
+            <Text style={[styles.modalTitle, { color: theme.colors.primaryText }]}>Gallery Item</Text>
+            <Text style={[styles.modalMessage, { color: theme.colors.secondaryText }]}>
               This is a {selectedItem?.type === 'user' ? 'user photo' : 'clothing item'}. What would you like to do?
             </Text>
             
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={styles.modalButton}
+                style={[styles.modalButton, { backgroundColor: theme.colors.surfaceSecondary }]}
                 onPress={() => {
                   setModalVisible(false);
                 }}
               >
-                <Text style={styles.modalButtonText}>Cancel</Text>
+                <Text style={[styles.modalButtonText, { color: theme.colors.primaryText }]}>Cancel</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
                 style={[styles.modalButton, styles.primaryModalButton]}
                 onPress={() => {
                   if (selectedItem) {
-                    navigateToTryOn(selectedItem);
+                    navigateToStyleMe(selectedItem);
                   }
                   setModalVisible(false);
                 }}
               >
                 <Text style={[styles.modalButtonText, styles.primaryModalButtonText]}>
-                  Use for Try-On
+                  Use for Style-Me
                 </Text>
               </TouchableOpacity>
               
@@ -249,21 +232,21 @@ export default function GalleryScreen() {
         onRequestClose={() => setDeleteModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <Text style={styles.modalTitle}>Delete Item</Text>
-            <Text style={styles.modalMessage}>
+          <View style={[styles.modalContainer, { backgroundColor: theme.colors.cardBackground }]}>
+            <Text style={[styles.modalTitle, { color: theme.colors.primaryText }]}>Delete Item</Text>
+            <Text style={[styles.modalMessage, { color: theme.colors.secondaryText }]}>
               Are you sure you want to delete this item?
             </Text>
             
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={styles.modalButton}
+                style={[styles.modalButton, { backgroundColor: theme.colors.surfaceSecondary }]}
                 onPress={() => {
                   setDeleteModalVisible(false);
                   setItemToDelete(null);
                 }}
               >
-                <Text style={styles.modalButtonText}>Cancel</Text>
+                <Text style={[styles.modalButtonText, { color: theme.colors.primaryText }]}>Cancel</Text>
               </TouchableOpacity>
               
               <TouchableOpacity
@@ -293,7 +276,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
   },
   backButton: {
     width: 32,
@@ -308,14 +290,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     fontWeight: '600',
-    color: '#000',
+    color: '#000000',
   },
   headerSpacer: {
     width: 32,
   },
   galleryGrid: {
     padding: 20,
-    paddingBottom: 100,
+    paddingBottom: 170,
   },
   row: {
     justifyContent: 'space-between',
@@ -354,13 +336,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   userBadge: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#000000',
   },
   outfitBadge: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#000000',
   },
   resultBadge: {
-    backgroundColor: '#FF9800',
+    backgroundColor: '#000000',
   },
   bottomContainer: {
     position: 'absolute',
@@ -371,7 +353,6 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: '#F5F5F5',
   },
   startButton: {
     flexDirection: 'row',

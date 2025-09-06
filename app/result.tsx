@@ -10,6 +10,7 @@ import {
   Animated,
   Dimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { router, useLocalSearchParams } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
@@ -17,15 +18,17 @@ import * as Sharing from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library';
 import * as FileSystem from 'expo-file-system';
 import { saveToGallery } from '@/services/storage';
-import { openRouterService } from '@/services/openrouter';
+import { useTheme } from '../components/contexts/ThemeContext';
 const { width, height } = Dimensions.get('window');
 
 export default function ResultScreen() {
   const params = useLocalSearchParams();
+  const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const generateNewTryOn = async () => {
+  const generateNewStyleMe = async () => {
     setIsGenerating(true);
     
     try {
@@ -33,40 +36,22 @@ export default function ResultScreen() {
       const outfitImageUri = typeof params.outfitImageUri === 'string' ? params.outfitImageUri : undefined;
       
       if (!userImageUri || !outfitImageUri) {
-        Alert.alert('Error', 'Missing original images. Cannot generate new variation.');
+        Alert.alert('Error', 'Missing original images. Please go back to style-me screen.');
         return;
       }
       
-      // Use OpenRouter service to generate new try-on
-      const response = await openRouterService.generateTryOnWithRetry({
-        userImageUri,
-        clothingImageUri: outfitImageUri,
-        clothingType: 'top', // Could be determined by image analysis
-        style: 'casual'
+      // Navigate back to processing screen for new style-me
+      router.push({
+        pathname: '/processing',
+        params: {
+          userImageUri,
+          outfitImageUri,
+          mode: 'regenerate',
+        },
       });
       
-      if (response.success && response.imageUrl) {
-        // Save the new result to gallery
-        try {
-          await saveToGallery(response.imageUrl, 'result');
-        } catch (error) {
-          // Silent fail for gallery save
-        }
-        
-        // Navigate to new result
-        router.replace({
-          pathname: '/result',
-          params: {
-            imageUri: response.imageUrl,
-            userImageUri,
-            outfitImageUri,
-          },
-        });
-      } else {
-        Alert.alert('Generation Failed', response.error || 'Failed to generate new try-on. Please try again.');
-      }
     } catch (error) {
-      Alert.alert('Error', 'Failed to generate new try-on. Please try again.');
+      Alert.alert('Error', 'Failed to start new style-me. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -89,13 +74,13 @@ export default function ResultScreen() {
         throw new Error('No image to save');
       }
       
-      const fileUri = `${FileSystem.documentDirectory}tryon_result_${Date.now()}.jpg`;
+      const fileUri = `${FileSystem.documentDirectory}styleme_result_${Date.now()}.jpg`;
       const downloadResult = await FileSystem.downloadAsync(imageUri, fileUri);
       
       if (downloadResult.status === 200) {
         const localUri = downloadResult.uri;
         const asset = await MediaLibrary.createAssetAsync(localUri);
-        await MediaLibrary.createAlbumAsync('Virtual Try-On', asset, false);
+        await MediaLibrary.createAlbumAsync('Virtual Style-Me', asset, false);
         
         // Also save to app gallery storage
         try {
@@ -123,7 +108,7 @@ export default function ResultScreen() {
         return;
       }
       
-      const localUri = await FileSystem.downloadAsync(imageUri, `${FileSystem.documentDirectory}tryon_result_${Date.now()}.jpg`);
+      const localUri = await FileSystem.downloadAsync(imageUri, `${FileSystem.documentDirectory}styleme_result_${Date.now()}.jpg`);
       await Sharing.shareAsync(localUri.uri);
     } catch (error) {
       Alert.alert('Error', 'Failed to share image. Please try again.');
@@ -131,16 +116,16 @@ export default function ResultScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 16, borderBottomColor: theme.colors.border }]}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: theme.colors.surfaceSecondary }]}
           onPress={() => router.back()}
         >
-          <IconSymbol name="chevron.left" size={24} color="#000" />
+          <IconSymbol name="chevron.left" size={24} color={theme.colors.primaryText} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Try-On Result</Text>
+        <Text style={[styles.headerTitle, { color: theme.colors.primaryText }]}>Style-Me Result</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -156,20 +141,24 @@ export default function ResultScreen() {
 
       {/* Action Buttons */}
       <View style={styles.actionsContainer}>
-        {/* Generate New Try-On and Share Row */}
+        {/* Generate New Style-Me and Share Row */}
         <View style={styles.bottomActionsRow}>
           <TouchableOpacity
-            style={[styles.generateButton, isGenerating && styles.disabledButton]}
-            onPress={generateNewTryOn}
+            style={[
+              styles.generateButton, 
+              { backgroundColor: theme.colors.buttonBackground },
+              isGenerating && styles.disabledButton
+            ]}
+            onPress={generateNewStyleMe}
             disabled={isGenerating}
           >
             {isGenerating ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator color="#FFFFFF" size="small" />
-                <Text style={styles.generateButtonText}>Generating...</Text>
+                <ActivityIndicator color={theme.colors.buttonText} size="small" />
+                <Text style={[styles.generateButtonText, { color: theme.colors.buttonText }]}>Generating...</Text>
               </View>
             ) : (
-              <Text style={styles.generateButtonText}>Generate New Try-On</Text>
+              <Text style={[styles.generateButtonText, { color: theme.colors.buttonText }]}>Generate New Style-Me</Text>
             )}
           </TouchableOpacity>
 
@@ -189,15 +178,13 @@ export default function ResultScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
   },
   backButton: {
     width: 32,
@@ -219,37 +206,42 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     flex: 1,
-    margin: 20,
-    borderRadius: 12,
+    marginLeft: 20,
+    marginRight: 20,
+    marginTop: 10,
+    marginBottom: 0,
+    borderRadius: 16,
     overflow: 'hidden',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: '#F8F9FA',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 5,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   resultImage: {
-    width: '100%',
+    width: '85%',
     height: '100%',
+    marginLeft: '15%',
   },
   actionsContainer: {
     paddingHorizontal: 20,
-    paddingBottom: 40,
+    paddingBottom: 100,
+    paddingTop: 16,
   },
   generateButton: {
-    backgroundColor: '#000000',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
     flex: 1,
-    height: 48,
-    marginRight: 16,
+    marginRight: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -263,7 +255,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#CCCCCC',
   },
   generateButtonText: {
-    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -282,14 +273,21 @@ const styles = StyleSheet.create({
   shareButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    backgroundColor: '#F5F5F5',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    backgroundColor: '#F8F9FA',
     flexDirection: 'row',
     gap: 8,
-    height: 48,
-    flex: 0.35,
+    flex: 0.4,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   shareButtonText: {
     fontSize: 14,
