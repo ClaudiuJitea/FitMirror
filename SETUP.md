@@ -16,8 +16,8 @@ npm install expo-image-manipulator expo-av
 # Copy the example environment file
 copy .env.example .env
 
-# Edit .env and add your OpenRouter API key:
-# EXPO_PUBLIC_OPENROUTER_API_KEY=your_openrouter_api_key_here
+# Edit .env and add your Fal.ai API key:
+# FAL_API_KEY=your_fal_api_key_here
 ```
 
 ### 3. Start Development Server
@@ -42,7 +42,7 @@ npx expo start
 
 ### Try-On Generation
 1. **Image Processing**: Navigate through the processing flow
-2. **API Integration**: Test with actual OpenRouter API (requires valid key)
+2. **API Integration**: Test with actual Fal.ai API (requires valid key)
 3. **Error Handling**: Test network errors and invalid inputs
 4. **Loading States**: Verify smooth loading animations
 
@@ -66,7 +66,7 @@ npx expo start
 
 ### Customization
 - Modify colors in `app/(tabs)/_layout.tsx`
-- Update AI prompts in `services/openrouter.ts`
+- Update AI prompts in `services/fal.ts`
 - Add new image processing features in `utils/imageUtils.ts`
 
 ## 🚨 Common Issues
@@ -77,7 +77,7 @@ npx expo start
 - Check camera permissions in device settings
 
 ### API Errors
-- Verify OpenRouter API key is valid
+- Verify Fal.ai API key is valid
 - Check network connectivity
 - Review API usage limits
 - Test with mock responses first
@@ -118,5 +118,5 @@ npx eas build -p android
 
 - [Expo Documentation](https://docs.expo.dev/)
 - [React Native Documentation](https://reactnative.dev/)
-- [OpenRouter API Docs](https://openrouter.ai/docs)
+- [Fal.ai API Docs](https://fal.ai/docs)
 - [Camera API Reference](https://docs.expo.dev/versions/latest/sdk/camera/)

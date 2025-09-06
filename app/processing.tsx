@@ -14,7 +14,6 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { openRouterService } from '@/services/openrouter';
 import { falService } from '@/services/fal';
 import { saveToGallery } from '@/services/storage';
 import { useTheme } from '../components/contexts/ThemeContext';
@@ -133,8 +132,7 @@ export default function ProcessingScreen() {
         'Generation Failed', 
         errorMessage,
         [
-          { text: 'Retry', onPress: () => generateStyleMe() },
-          { text: 'Cancel', style: 'cancel' }
+          { text: 'OK', style: 'cancel' }
         ]
       );
     } finally {

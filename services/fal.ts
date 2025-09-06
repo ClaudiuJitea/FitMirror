@@ -191,20 +191,14 @@ class FalService {
 
       console.log('Uploaded URLs:', { user: userImageUrl, clothing: clothingImageUrl });
 
-      // Use the exact nano-banana/edit endpoint from the documentation
-      const result = await fal.subscribe("fal-ai/nano-banana/edit", {
+      // Use one-time API call instead of subscription to prevent credit drain
+      const result = await fal.run("fal-ai/nano-banana/edit", {
         input: {
           prompt: "Use Image 1 as the target subject: preserve the exact body, skin, and pose, while removing all original clothing and accessories entirely. From Image 2, isolate the full outfit only (removing its model or background if present). Apply this outfit onto the subject from Image 1 so it naturally conforms to body shape, pose, and proportions. Ensure perfect integration by matching Image 1's lighting, shadows, perspective, and texture details. The final output must look like a single seamless photorealistic photo of the subject authentically wearing only the outfit from Image 2, with zero traces of the original garments.",
           image_urls: [userImageUrl, clothingImageUrl],
           num_images: 1,
           output_format: "jpeg"
-        },
-        logs: true,
-        onQueueUpdate: (update) => {
-          if (update.status === "IN_PROGRESS") {
-            update.logs?.map((log) => log.message).forEach(console.log);
-          }
-        },
+        }
       });
 
       console.log('Fal.ai result:', result);
@@ -281,14 +275,14 @@ class FalService {
   }
 
   /**
-   * Retry mechanism for failed requests
+   * Single attempt generation - no retries to prevent credit waste
    */
   async generateStyleMeWithRetry(
     request: FalStyleMeRequest, 
-    maxRetries: number = 1,
-    retryDelay: number = 1000
+    maxRetries: number = 0,
+    retryDelay: number = 0
   ): Promise<FalStyleMeResponse> {
-    // NO RETRIES - single attempt only to prevent credit waste
+    // Single attempt only to prevent credit waste
     return await this.generateStyleMe(request);
   }
 

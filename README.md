@@ -119,7 +119,6 @@ FitMirror/
 │   └── _layout.tsx           # Root navigation layout
 ├── services/
 │   ├── fal.ts                # Fal.ai API integration
-│   ├── openrouter.ts         # OpenRouter API integration
 │   └── storage.ts            # Local data management
 ├── components/               # Reusable UI components
 ├── assets/                   # Images, icons, fonts
