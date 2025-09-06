@@ -170,7 +170,13 @@ export default function GalleryScreen() {
           />
           {galleryData.length > 0 && (
             <View style={styles.helpTextContainer}>
-              <Text style={[styles.helpText, { color: theme.colors.secondaryText }]}>
+              <Text style={[
+                styles.helpText, 
+                { 
+                  color: theme.colors.secondaryText,
+                  backgroundColor: theme.isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
+                }
+              ]}>
                 Tap to view • Long press to delete
               </Text>
             </View>
@@ -196,8 +202,14 @@ export default function GalleryScreen() {
         animationType="fade"
         onRequestClose={() => setModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContainer, { backgroundColor: theme.colors.cardBackground }]}>
+        <View style={[styles.modalOverlay, { backgroundColor: theme.colors.overlay }]}>
+          <View style={[
+            styles.modalContainer, 
+            { 
+              backgroundColor: theme.colors.cardBackground,
+              shadowColor: theme.isDarkMode ? '#FFFFFF' : '#000000'
+            }
+          ]}>
             <Text style={[styles.modalTitle, { color: theme.colors.primaryText }]}>Gallery Item</Text>
             <Text style={[styles.modalMessage, { color: theme.colors.secondaryText }]}>
               This is a {
@@ -221,7 +233,7 @@ export default function GalleryScreen() {
               
               {selectedItem?.type === 'result' ? (
                 <TouchableOpacity
-                  style={[styles.modalButton, styles.primaryModalButton]}
+                  style={[styles.modalButton, styles.primaryModalButton, { backgroundColor: theme.colors.buttonBackground }]}
                   onPress={() => {
                     if (selectedItem) {
                       router.push({
@@ -235,13 +247,13 @@ export default function GalleryScreen() {
                     setModalVisible(false);
                   }}
                 >
-                  <Text style={[styles.modalButtonText, styles.primaryModalButtonText]}>
+                  <Text style={[styles.modalButtonText, styles.primaryModalButtonText, { color: theme.colors.buttonText }]}>
                     View Result
                   </Text>
                 </TouchableOpacity>
               ) : (
                 <TouchableOpacity
-                  style={[styles.modalButton, styles.primaryModalButton]}
+                  style={[styles.modalButton, styles.primaryModalButton, { backgroundColor: theme.colors.buttonBackground }]}
                   onPress={() => {
                     if (selectedItem) {
                       navigateToStyleMe(selectedItem);
@@ -249,14 +261,14 @@ export default function GalleryScreen() {
                     setModalVisible(false);
                   }}
                 >
-                  <Text style={[styles.modalButtonText, styles.primaryModalButtonText]}>
+                  <Text style={[styles.modalButtonText, styles.primaryModalButtonText, { color: theme.colors.buttonText }]}>
                     Use for Style-Me
                   </Text>
                 </TouchableOpacity>
               )}
               
               <TouchableOpacity
-                style={[styles.modalButton, styles.destructiveModalButton]}
+                style={[styles.modalButton, styles.destructiveModalButton, { backgroundColor: theme.colors.error || '#FF3B30' }]}
                 onPress={() => {
                   if (selectedItem) {
                     deleteItem(selectedItem.id);
@@ -280,8 +292,14 @@ export default function GalleryScreen() {
         animationType="fade"
         onRequestClose={() => setDeleteModalVisible(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalContainer, { backgroundColor: theme.colors.cardBackground }]}>
+        <View style={[styles.modalOverlay, { backgroundColor: theme.colors.overlay }]}>
+          <View style={[
+            styles.modalContainer, 
+            { 
+              backgroundColor: theme.colors.cardBackground,
+              shadowColor: theme.isDarkMode ? '#FFFFFF' : '#000000'
+            }
+          ]}>
             <Text style={[styles.modalTitle, { color: theme.colors.primaryText }]}>Delete Item</Text>
             <Text style={[styles.modalMessage, { color: theme.colors.secondaryText }]}>
               Are you sure you want to delete this item?
@@ -299,7 +317,7 @@ export default function GalleryScreen() {
               </TouchableOpacity>
               
               <TouchableOpacity
-                style={[styles.modalButton, styles.destructiveModalButton]}
+                style={[styles.modalButton, styles.destructiveModalButton, { backgroundColor: theme.colors.error || '#FF3B30' }]}
                 onPress={confirmDelete}
               >
                 <Text style={[styles.modalButtonText, styles.destructiveModalButtonText]}>
