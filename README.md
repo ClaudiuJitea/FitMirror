@@ -18,10 +18,10 @@
 ## Screenshots
 
 <div align="center">
-  <img src="appimages/1.png" alt="Camera Interface" width="200" style="margin: 10px;"/>
-  <img src="appimages/4.png" alt="Style-Me Try-On Page" width="200" style="margin: 10px;"/>
-  <img src="appimages/2.png" alt="Gallery Management" width="200" style="margin: 10px;"/>
-  <img src="appimages/3.png" alt="Settings & Configuration" width="200" style="margin: 10px;"/>
+  <img src="appimages/1.png" alt="Camera Interface" width="200" height="400" style="margin: 10px; object-fit: cover;"/>
+  <img src="appimages/4.png" alt="Style-Me Try-On Page" width="200" height="400" style="margin: 10px; object-fit: cover;"/>
+  <img src="appimages/2.png" alt="Gallery Management" width="200" height="400" style="margin: 10px; object-fit: cover;"/>
+  <img src="appimages/3.png" alt="Settings & Configuration" width="200" height="400" style="margin: 10px; object-fit: cover;"/>
 </div>
 
 <div align="center">
