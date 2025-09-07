@@ -73,7 +73,7 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/FitMirror.git
+   git clone https://github.com/ClaudiuJitea/FitMirror.git
    cd FitMirror
    ```
 
@@ -378,11 +378,11 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 ## 📞 Support & Contact
 
 ### **Issues & Bug Reports**
-Create an issue on [GitHub Issues](https://github.com/your-username/FitMirror/issues)
+Create an issue on [GitHub Issues](https://github.com/ClaudiuJitea/FitMirror/issues)
 
 ### **Questions & Discussions**
-- Check existing [Discussions](https://github.com/your-username/FitMirror/discussions)
-- Review [Documentation](https://github.com/your-username/FitMirror/wiki)
+- Check existing [Discussions](https://github.com/ClaudiuJitea/FitMirror/discussions)
+- Review [Documentation](https://github.com/ClaudiuJitea/FitMirror/wiki)
 
 ### **Additional Resources**
 - [Expo Documentation](https://docs.expo.dev/)
