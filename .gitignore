@@ -40,4 +40,15 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# React Native AsyncStorage & other storage
+AsyncStorage*
+*.sqlite
+*.db
+*.realm
+
+# Device-specific data
+simulator-data/
+android-data/
+ios-data/
+
 app-example

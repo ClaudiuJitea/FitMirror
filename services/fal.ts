@@ -197,7 +197,28 @@ class FalService {
       // Use one-time API call instead of subscription to prevent credit drain
       const result = await fal.run("fal-ai/nano-banana/edit", {
         input: {
-          prompt: "Make this person wear the clothes from the second image. Remove all original clothing and replace with the outfit from image 2. Keep the same face, pose, body shape, and lighting. Photorealistic result.",
+          prompt: `You are an expert AI fashion stylist and photorealistic editor. Your task is to perform a seamless virtual try-on.
+
+**Source Inputs:**
+- **[Image 1] The Model:** This image contains a person. You must preserve their identity, pose, and environment.
+- **[Image 2] The Garment:** This image contains an article of clothing. You must extract its texture, color, and design.
+
+**Core Objective:**
+Generate a new, photorealistic image where the person from **[Image 1]** is wearing the clothing from **[Image 2]**.
+
+**Detailed Execution Steps:**
+1.  **Analyze the Model:** Identify the person's exact pose, body proportions, and the lighting conditions in [Image 1]. Pay close attention to the direction and softness of shadows.
+2.  **Isolate the Garment:** Identify and isolate the clothing item(s) in [Image 2], capturing the complete design, texture, and fabric details.
+3.  **Perform the Swap:** Replace the original clothing on the model with the new garment.
+4.  **Ensure Perfect Fit & Drape:** The new garment must wrap and fold naturally around the model's body, respecting their posture. Create realistic wrinkles, seams, and shadows to show how the fabric interacts with the body.
+5.  **Integrate Lighting:** The lighting on the garment must be completely consistent with the lighting on the model in [Image 1]. This includes casting subtle shadows from the model's body (e.g., chin, arms) onto the clothing.
+6.  **Final Output:** Produce a single, high-resolution, photorealistic image with no signs of digital manipulation.
+
+**Strict Constraints (What NOT to change):**
+-   The model's face, hair, and skin.
+-   The model's body shape and proportions.
+-   The background of [Image 1].
+-   The original pose.`,
           image_urls: [userImageUrl, clothingImageUrl],
           num_images: 1,
           output_format: "jpeg"

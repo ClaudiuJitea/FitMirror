@@ -150,7 +150,7 @@ export default function ProcessingScreen() {
   };
 
   const selectMissingImage = () => {
-    const missingMode = !userImage ? 'look' : 'outfit';
+    const missingMode = !outfitImage ? 'outfit' : 'look';
     router.push({
       pathname: '/(tabs)',
       params: {
@@ -181,94 +181,172 @@ export default function ProcessingScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      {/* Image Comparison View */}
-      <View style={styles.comparisonContainer}>
-        {/* User Image */}
-        {(expandedSection === null || expandedSection === 'user') && (
-          <TouchableOpacity 
-            style={[
-              styles.imageContainer,
-              { backgroundColor: theme.colors.cardBackground },
-              expandedSection === 'user' && styles.expandedContainer
-            ]}
-            onPress={() => toggleSection('user')}
-            activeOpacity={0.8}
-          >
-            {userImage ? (
-                <Image
-                  source={{ uri: userImage }}
-                  style={styles.comparisonImage}
-                  resizeMode="cover"
-                />
-            ) : (
-                <TouchableOpacity 
-                  style={[styles.placeholderContainer, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}
-                  onPress={selectMissingImage}
-                >
-                  <IconSymbol name="person" size={60} color={theme.colors.secondaryText} />
-                  <Text style={[styles.placeholderText, { color: theme.colors.secondaryText }]}>Add Your Photo</Text>
-                </TouchableOpacity>
-            )}
-            <View style={[styles.imageLabel, { backgroundColor: theme.colors.surface }]}>
-              <Text style={[styles.imageLabelText, { color: theme.colors.primaryText }]}>Your Look</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-
-        {/* Outfit Image */}
-        {(expandedSection === null || expandedSection === 'outfit') && (
-          <TouchableOpacity 
-            style={[
-              styles.imageContainer,
-              { backgroundColor: theme.colors.cardBackground },
-              expandedSection === 'outfit' && styles.expandedContainer
-            ]}
-            onPress={() => toggleSection('outfit')}
-            activeOpacity={0.8}
-          >
-            {outfitImage ? (
-                <Image
-                  source={{ uri: outfitImage }}
-                  style={styles.comparisonImage}
-                  resizeMode="cover"
-                />
-            ) : (
-                <TouchableOpacity 
-                  style={[styles.placeholderContainer, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}
-                  onPress={selectMissingImage}
-                >
-                  <IconSymbol name="tshirt" size={60} color={theme.colors.secondaryText} />
-                  <Text style={[styles.placeholderText, { color: theme.colors.secondaryText }]}>Add Outfit Piece</Text>
-                </TouchableOpacity>
-            )}
-            <View style={[styles.imageLabel, { backgroundColor: theme.colors.surface }]}>
-              <Text style={[styles.imageLabelText, { color: theme.colors.primaryText }]}>Your Item</Text>
-            </View>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Generate Button */}
-      <View style={[styles.buttonContainer, { paddingBottom: Math.max(insets.bottom + 80, 104) }]}>
-        <TouchableOpacity
-          style={[
-            styles.generateButton,
-            { backgroundColor: theme.colors.buttonBackground },
-            (!userImage || !outfitImage || isProcessing) && styles.disabledButton
-          ]}
-          onPress={generateStyleMe}
-          disabled={!userImage || !outfitImage || isProcessing}
-        >
-          {isProcessing ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator color={theme.colors.buttonText} size="small" />
-              <Text style={[styles.buttonText, { color: theme.colors.buttonText }]}>Processing...</Text>
-            </View>
-          ) : (
-            <Text style={[styles.buttonText, { color: theme.colors.buttonText }]}>Generate Style-Me</Text>
+      {/* Content Container */}
+      <View style={styles.contentContainer}>
+        {/* Image Comparison View */}
+        <View style={styles.comparisonContainer}>
+          {/* Outfit Image - Now First */}
+          {(expandedSection === null || expandedSection === 'outfit') && (
+            <TouchableOpacity 
+              style={[
+                styles.imageContainer,
+                { backgroundColor: theme.colors.cardBackground },
+                expandedSection === 'outfit' && styles.expandedContainer
+              ]}
+              onPress={() => toggleSection('outfit')}
+              activeOpacity={0.8}
+            >
+              {outfitImage ? (
+                  <Image
+                    source={{ uri: outfitImage }}
+                    style={styles.comparisonImage}
+                    resizeMode="cover"
+                  />
+              ) : (
+                  <TouchableOpacity 
+                    style={[styles.placeholderContainer, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}
+                    onPress={selectMissingImage}
+                  >
+                    <IconSymbol name="tshirt" size={60} color={theme.colors.secondaryText} />
+                    <Text style={[styles.placeholderText, { color: theme.colors.secondaryText }]}>Add Outfit Piece</Text>
+                  </TouchableOpacity>
+              )}
+              
+              {/* Floating Action Buttons for Expanded View */}
+              {expandedSection === 'outfit' && outfitImage && (
+                <View style={styles.floatingActions}>
+                  <TouchableOpacity
+                    style={[styles.floatingActionButton, { backgroundColor: '#10B981' }]}
+                    onPress={() => setExpandedSection(null)}
+                  >
+                    <Text style={styles.floatingActionText}>Keep</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={[styles.floatingActionButton, { backgroundColor: theme.colors.buttonBackground }]}
+                    onPress={() => {
+                      setExpandedSection(null);
+                      router.push({
+                        pathname: '/(tabs)',
+                        params: {
+                          mode: 'outfit',
+                          returnTo: 'processing',
+                          existingUserImage: userImage,
+                          existingOutfitImage: outfitImage,
+                        },
+                      });
+                    }}
+                  >
+                    <Text style={styles.floatingActionText}>Change</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={[styles.floatingActionButton, { backgroundColor: '#EF4444' }]}
+                    onPress={() => setExpandedSection(null)}
+                  >
+                    <Text style={styles.floatingActionText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              
+              <View style={[styles.imageLabel, { backgroundColor: theme.colors.surface }]}>
+                <Text style={[styles.imageLabelText, { color: theme.colors.primaryText }]}>Your Item</Text>
+              </View>
+            </TouchableOpacity>
           )}
-        </TouchableOpacity>
 
+          {/* User Image - Now Second */}
+          {(expandedSection === null || expandedSection === 'user') && (
+            <TouchableOpacity 
+              style={[
+                styles.imageContainer,
+                { backgroundColor: theme.colors.cardBackground },
+                expandedSection === 'user' && styles.expandedContainer
+              ]}
+              onPress={() => toggleSection('user')}
+              activeOpacity={0.8}
+            >
+              {userImage ? (
+                  <Image
+                    source={{ uri: userImage }}
+                    style={styles.comparisonImage}
+                    resizeMode="cover"
+                  />
+              ) : (
+                  <TouchableOpacity 
+                    style={[styles.placeholderContainer, { backgroundColor: theme.colors.cardBackground, borderColor: theme.colors.border }]}
+                    onPress={selectMissingImage}
+                  >
+                    <IconSymbol name="person" size={60} color={theme.colors.secondaryText} />
+                    <Text style={[styles.placeholderText, { color: theme.colors.secondaryText }]}>Add Your Photo</Text>
+                  </TouchableOpacity>
+              )}
+              
+              {/* Floating Action Buttons for Expanded View */}
+              {expandedSection === 'user' && userImage && (
+                <View style={styles.floatingActions}>
+                  <TouchableOpacity
+                    style={[styles.floatingActionButton, { backgroundColor: '#10B981' }]}
+                    onPress={() => setExpandedSection(null)}
+                  >
+                    <Text style={styles.floatingActionText}>Keep</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={[styles.floatingActionButton, { backgroundColor: theme.colors.buttonBackground }]}
+                    onPress={() => {
+                      setExpandedSection(null);
+                      router.push({
+                        pathname: '/(tabs)',
+                        params: {
+                          mode: 'look',
+                          returnTo: 'processing',
+                          existingUserImage: userImage,
+                          existingOutfitImage: outfitImage,
+                        },
+                      });
+                    }}
+                  >
+                    <Text style={styles.floatingActionText}>Change</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={[styles.floatingActionButton, { backgroundColor: '#EF4444' }]}
+                    onPress={() => setExpandedSection(null)}
+                  >
+                    <Text style={styles.floatingActionText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              
+              <View style={[styles.imageLabel, { backgroundColor: theme.colors.surface }]}>
+                <Text style={[styles.imageLabelText, { color: theme.colors.primaryText }]}>Your Look</Text>
+              </View>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Fixed Bottom Generate Button */}
+        <View style={[styles.fixedBottomContainer, { paddingBottom: insets.bottom + 20 }]}>
+          <TouchableOpacity
+            style={[
+              styles.generateButton,
+              { backgroundColor: theme.colors.buttonBackground },
+              (!userImage || !outfitImage || isProcessing) && styles.disabledButton
+            ]}
+            onPress={generateStyleMe}
+            disabled={!userImage || !outfitImage || isProcessing}
+          >
+            {isProcessing ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator color={theme.colors.buttonText} size="small" />
+                <Text style={[styles.buttonText, { color: theme.colors.buttonText }]}>Processing...</Text>
+              </View>
+            ) : (
+              <Text style={[styles.buttonText, { color: theme.colors.buttonText }]}>Generate Style-Me</Text>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* API Key Required Modal */}
@@ -364,11 +442,16 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 32,
   },
+  contentContainer: {
+    flex: 1,
+    position: 'relative',
+  },
   comparisonContainer: {
     flex: 1,
     flexDirection: 'row',
     paddingHorizontal: 24,
     paddingVertical: 32,
+    paddingBottom: 20,
     gap: 20,
   },
   imageContainer: {
@@ -434,9 +517,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  buttonContainer: {
+  fixedBottomContainer: {
     paddingHorizontal: 24,
-    paddingVertical: 24,
+    paddingTop: 16,
+    backgroundColor: 'transparent',
   },
   generateButton: {
     paddingVertical: 18,
@@ -537,5 +621,38 @@ const styles = StyleSheet.create({
   modalButtonText: {
     fontSize: 16,
     fontWeight: '600',
+  },
+  floatingActions: {
+    position: 'absolute',
+    bottom: 70,
+    right: 20,
+    flexDirection: 'column',
+    gap: 12,
+    zIndex: 10,
+  },
+  floatingActionButton: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minWidth: 90,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  floatingActionText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+    lineHeight: 16,
   },
 });

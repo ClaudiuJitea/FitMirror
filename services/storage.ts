@@ -1,5 +1,5 @@
-// Simple storage service with mock implementation for demo
-// In production: Replace with actual SQLite or AsyncStorage
+// Persistent storage service using AsyncStorage
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface StorageData {
   settings: Record<string, any>;
@@ -24,15 +24,73 @@ class StorageService {
   };
   
   private initialized = false;
+  private readonly STORAGE_KEYS = {
+    SETTINGS: '@fitmirror:settings',
+    GALLERY: '@fitmirror:gallery',
+    PROFILE: '@fitmirror:profile',
+  };
 
   async initialize(): Promise<void> {
-    // Mock initialization - in production this would open SQLite database
-    this.initialized = true;
+    try {
+      // Load existing data from AsyncStorage
+      await this.loadFromStorage();
+      this.initialized = true;
+    } catch (error) {
+      console.error('Failed to initialize storage:', error);
+      this.initialized = true; // Continue with empty data
+    }
+  }
+
+  private async loadFromStorage(): Promise<void> {
+    try {
+      const [settingsJson, galleryJson, profileJson] = await Promise.all([
+        AsyncStorage.getItem(this.STORAGE_KEYS.SETTINGS),
+        AsyncStorage.getItem(this.STORAGE_KEYS.GALLERY),
+        AsyncStorage.getItem(this.STORAGE_KEYS.PROFILE),
+      ]);
+
+      if (settingsJson) {
+        this.data.settings = JSON.parse(settingsJson);
+      }
+      if (galleryJson) {
+        this.data.galleryItems = JSON.parse(galleryJson);
+      }
+      if (profileJson) {
+        this.data.userProfile = JSON.parse(profileJson);
+      }
+    } catch (error) {
+      console.error('Failed to load data from storage:', error);
+    }
+  }
+
+  private async saveSettings(): Promise<void> {
+    try {
+      await AsyncStorage.setItem(this.STORAGE_KEYS.SETTINGS, JSON.stringify(this.data.settings));
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+    }
+  }
+
+  private async saveGallery(): Promise<void> {
+    try {
+      await AsyncStorage.setItem(this.STORAGE_KEYS.GALLERY, JSON.stringify(this.data.galleryItems));
+    } catch (error) {
+      console.error('Failed to save gallery:', error);
+    }
+  }
+
+  private async saveProfile(): Promise<void> {
+    try {
+      await AsyncStorage.setItem(this.STORAGE_KEYS.PROFILE, JSON.stringify(this.data.userProfile));
+    } catch (error) {
+      console.error('Failed to save profile:', error);
+    }
   }
 
   // Settings operations
   async setSetting(key: string, value: any): Promise<void> {
     this.data.settings[key] = value;
+    await this.saveSettings();
   }
 
   async getSetting(key: string): Promise<any> {
@@ -41,6 +99,7 @@ class StorageService {
 
   async deleteSetting(key: string): Promise<void> {
     delete this.data.settings[key];
+    await this.saveSettings();
   }
 
   async getAllSettings(): Promise<Record<string, any>> {
@@ -56,6 +115,7 @@ class StorageService {
       type,
       timestamp: Date.now(),
     });
+    await this.saveGallery();
     return id;
   }
 
@@ -74,11 +134,13 @@ class StorageService {
   async deleteGalleryItem(id: string | number): Promise<void> {
     const itemId = typeof id === 'string' ? id : id.toString();
     this.data.galleryItems = this.data.galleryItems.filter(item => item.id !== itemId);
+    await this.saveGallery();
   }
 
   // User profile operations
   async setUserProfile(profile: { name: string; email: string; profileImage?: string }): Promise<void> {
     this.data.userProfile = profile;
+    await this.saveProfile();
   }
 
   async getUserProfile(): Promise<{ name: string; email: string; profileImage?: string } | null> {
@@ -88,6 +150,7 @@ class StorageService {
   // Utility operations
   async clearCache(): Promise<void> {
     this.data.galleryItems = this.data.galleryItems.filter(item => item.type !== 'result');
+    await this.saveGallery();
   }
 
   async clearMockData(): Promise<void> {
@@ -96,6 +159,7 @@ class StorageService {
       !item.id.startsWith('mock-') && 
       !item.uri.includes('unsplash.com')
     );
+    await this.saveGallery();
   }
 
   async clearAllData(): Promise<void> {
@@ -104,6 +168,16 @@ class StorageService {
       galleryItems: [],
       userProfile: null,
     };
+    // Clear all AsyncStorage keys
+    try {
+      await Promise.all([
+        AsyncStorage.removeItem(this.STORAGE_KEYS.SETTINGS),
+        AsyncStorage.removeItem(this.STORAGE_KEYS.GALLERY),
+        AsyncStorage.removeItem(this.STORAGE_KEYS.PROFILE),
+      ]);
+    } catch (error) {
+      console.error('Failed to clear AsyncStorage:', error);
+    }
   }
 
   async getStats(): Promise<{

@@ -18,14 +18,21 @@
 ## Screenshots
 
 <div align="center">
-  <img src="appimages/1.png" alt="Camera Interface" width="200" height="400" style="margin: 10px; object-fit: cover;"/>
-  <img src="appimages/4.png" alt="Style-Me Try-On Page" width="200" height="400" style="margin: 10px; object-fit: cover;"/>
-  <img src="appimages/2.png" alt="Gallery Management" width="200" height="400" style="margin: 10px; object-fit: cover;"/>
-  <img src="appimages/3.png" alt="Settings & Configuration" width="200" height="400" style="margin: 10px; object-fit: cover;"/>
+  <img src="appimages/1.png" alt="Camera Interface" width="180" height="360" style="margin: 8px; object-fit: cover;"/>
+  <img src="appimages/2.png" alt="Style-Me Processing" width="180" height="360" style="margin: 8px; object-fit: cover;"/>
+  <img src="appimages/3.png" alt="Virtual Try-On Results" width="180" height="360" style="margin: 8px; object-fit: cover;"/>
+  <img src="appimages/4.png" alt="Gallery Management" width="180" height="360" style="margin: 8px; object-fit: cover;"/>
 </div>
 
 <div align="center">
-  <em>Camera Interface • Style-Me Try-On • Gallery Management • Settings & Configuration</em>
+  <img src="appimages/5.png" alt="User Profile Settings" width="180" height="360" style="margin: 8px; object-fit: cover;"/>
+  <img src="appimages/6.png" alt="API Configuration" width="180" height="360" style="margin: 8px; object-fit: cover;"/>
+  <img src="appimages/7.png" alt="Advanced Settings" width="180" height="360" style="margin: 8px; object-fit: cover;"/>
+</div>
+
+<div align="center">
+  <em>Camera Interface • Style-Me Processing • Virtual Try-On Results • Gallery Management</em><br/>
+  <em>User Profile Settings • API Configuration • Advanced Settings</em>
 </div>
 
 ---

@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Animated,
   Dimensions,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
@@ -27,6 +28,15 @@ export default function ResultScreen() {
   const { theme } = useTheme();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorModalTitle, setErrorModalTitle] = useState('');
+  const [errorModalMessage, setErrorModalMessage] = useState('');
+
+  const showErrorModal = (title: string, message: string) => {
+    setErrorModalTitle(title);
+    setErrorModalMessage(message);
+    setErrorModalVisible(true);
+  };
 
   const generateNewStyleMe = async () => {
     setIsGenerating(true);
@@ -36,7 +46,7 @@ export default function ResultScreen() {
       const outfitImageUri = typeof params.outfitImageUri === 'string' ? params.outfitImageUri : undefined;
       
       if (!userImageUri || !outfitImageUri) {
-        Alert.alert('Error', 'Missing original images. Please go back to style-me screen.');
+        showErrorModal('Error', 'Missing original images. Please go back to style-me screen.');
         return;
       }
       
@@ -51,7 +61,7 @@ export default function ResultScreen() {
       });
       
     } catch (error) {
-      Alert.alert('Error', 'Failed to start new style-me. Please try again.');
+      showErrorModal('Error', 'Failed to start new style-me. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -64,7 +74,7 @@ export default function ResultScreen() {
       // Request media library permissions
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Required', 'Please grant access to save images to your gallery.');
+        showErrorModal('Permission Required', 'Please grant access to save images to your gallery.');
         return;
       }
 
@@ -89,12 +99,12 @@ export default function ResultScreen() {
           // Silent fail for app gallery save
         }
         
-        Alert.alert('Success', 'Image saved to your photo library!');
+        showErrorModal('Success', 'Image saved to your photo library!');
       } else {
         throw new Error('Failed to download image');
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to save image. Please try again.');
+      showErrorModal('Error', 'Failed to save image. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -104,14 +114,14 @@ export default function ResultScreen() {
     try {
       const imageUri = typeof params.imageUri === 'string' ? params.imageUri : '';
       if (!imageUri) {
-        Alert.alert('Error', 'No image to share.');
+        showErrorModal('Error', 'No image to share.');
         return;
       }
       
       const localUri = await FileSystem.downloadAsync(imageUri, `${FileSystem.documentDirectory}styleme_result_${Date.now()}.jpg`);
       await Sharing.shareAsync(localUri.uri);
     } catch (error) {
-      Alert.alert('Error', 'Failed to share image. Please try again.');
+      showErrorModal('Error', 'Failed to share image. Please try again.');
     }
   };
 
@@ -129,48 +139,74 @@ export default function ResultScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      {/* Result Image */}
-      <View style={styles.imageContainer}>
-        <Image
-          source={{ uri: typeof params.imageUri === 'string' ? params.imageUri : '' }}
-          style={styles.resultImage}
-          contentFit="cover"
-          transition={300}
-        />
-      </View>
+      {/* Content Container */}
+      <View style={styles.contentContainer}>
+        {/* Result Image */}
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: typeof params.imageUri === 'string' ? params.imageUri : '' }}
+            style={styles.resultImage}
+            contentFit="cover"
+            transition={300}
+          />
+        </View>
 
-      {/* Action Buttons */}
-      <View style={styles.actionsContainer}>
-        {/* Generate New Style-Me and Share Row */}
-        <View style={styles.bottomActionsRow}>
-          <TouchableOpacity
-            style={[
-              styles.generateButton, 
-              { backgroundColor: theme.colors.buttonBackground },
-              isGenerating && styles.disabledButton
-            ]}
-            onPress={generateNewStyleMe}
-            disabled={isGenerating}
-          >
-            {isGenerating ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator color={theme.colors.buttonText} size="small" />
-                <Text style={[styles.generateButtonText, { color: theme.colors.buttonText }]}>Generating...</Text>
-              </View>
-            ) : (
-              <Text style={[styles.generateButtonText, { color: theme.colors.buttonText }]}>Generate New Style-Me</Text>
-            )}
-          </TouchableOpacity>
+        {/* Fixed Bottom Action Buttons */}
+        <View style={[styles.fixedBottomContainer, { paddingBottom: insets.bottom + 20 }]}>
+          <View style={styles.bottomActionsRow}>
+            <TouchableOpacity
+              style={[
+                styles.generateButton, 
+                { backgroundColor: theme.colors.buttonBackground },
+                isGenerating && styles.disabledButton
+              ]}
+              onPress={generateNewStyleMe}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator color={theme.colors.buttonText} size="small" />
+                  <Text style={[styles.generateButtonText, { color: theme.colors.buttonText }]}>Generating...</Text>
+                </View>
+              ) : (
+                <Text style={[styles.generateButtonText, { color: theme.colors.buttonText }]}>Generate New Style-Me</Text>
+              )}
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.shareButton}
-            onPress={shareImage}
-          >
-            <IconSymbol name="square.and.arrow.up" size={20} color="#666666" />
-            <Text style={styles.shareButtonText}>Share</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.shareButton, { backgroundColor: theme.colors.surfaceSecondary }]}
+              onPress={shareImage}
+            >
+              <IconSymbol name="square.and.arrow.up" size={20} color={theme.colors.primaryText} />
+              <Text style={[styles.shareButtonText, { color: theme.colors.primaryText }]}>Share</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
+
+      {/* Error/Info Modal */}
+      <Modal
+        visible={errorModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setErrorModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, { backgroundColor: theme.colors.cardBackground }]}>
+            <Text style={[styles.modalTitle, { color: theme.colors.primaryText }]}>{errorModalTitle}</Text>
+            <Text style={[styles.modalMessage, { color: theme.colors.secondaryText }]}>{errorModalMessage}</Text>
+            
+            <TouchableOpacity
+              style={[styles.modalButton, { backgroundColor: theme.colors.buttonBackground }]}
+              onPress={() => setErrorModalVisible(false)}
+            >
+              <Text style={[styles.modalButtonText, { color: theme.colors.buttonText }]}>
+                OK
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -204,12 +240,16 @@ const styles = StyleSheet.create({
   headerSpacer: {
     width: 32,
   },
+  contentContainer: {
+    flex: 1,
+    position: 'relative',
+  },
   imageContainer: {
     flex: 1,
     marginLeft: 20,
     marginRight: 20,
     marginTop: 10,
-    marginBottom: 0,
+    marginBottom: 20,
     borderRadius: 16,
     overflow: 'hidden',
     backgroundColor: '#F8F9FA',
@@ -229,10 +269,10 @@ const styles = StyleSheet.create({
     height: '100%',
     marginLeft: '15%',
   },
-  actionsContainer: {
+  fixedBottomContainer: {
     paddingHorizontal: 20,
-    paddingBottom: 100,
     paddingTop: 16,
+    backgroundColor: 'transparent',
   },
   generateButton: {
     paddingVertical: 16,
@@ -267,7 +307,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
     gap: 16,
   },
   shareButton: {
@@ -276,7 +315,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 16,
-    backgroundColor: '#F8F9FA',
     flexDirection: 'row',
     gap: 8,
     flex: 0.4,
@@ -291,7 +329,53 @@ const styles = StyleSheet.create({
   },
   shareButtonText: {
     fontSize: 14,
-    color: '#666666',
     fontWeight: '500',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 24,
+    minWidth: 280,
+    maxWidth: 340,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#000000',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 14,
+    color: '#666666',
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  modalButton: {
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
