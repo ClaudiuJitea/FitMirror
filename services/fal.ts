@@ -104,8 +104,8 @@ class FalService {
         return { success: false, error: 'API key is required' };
       }
 
-      // Basic API key format validation
-      if (!this.config.apiKey.match(/^[a-zA-Z0-9\-_]+$/)) {
+      // Basic API key format validation - allow colons for fal.ai keys
+      if (!this.config.apiKey.match(/^[a-zA-Z0-9\-_:]+$/)) {
         return { success: false, error: 'Invalid API key format' };
       }
 
