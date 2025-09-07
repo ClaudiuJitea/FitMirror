@@ -168,19 +168,6 @@ export default function GalleryScreen() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.galleryGrid}
           />
-          {galleryData.length > 0 && (
-            <View style={styles.helpTextContainer}>
-              <Text style={[
-                styles.helpText, 
-                { 
-                  color: theme.colors.secondaryText,
-                  backgroundColor: theme.isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'
-                }
-              ]}>
-                Tap to view • Long press to delete
-              </Text>
-            </View>
-          )}
         </>
       )}
 
@@ -525,12 +512,10 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   helpTextContainer: {
-    position: 'absolute',
-    bottom: 200,
-    left: 0,
-    right: 0,
     alignItems: 'center',
     paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
   },
   helpText: {
     fontSize: 14,

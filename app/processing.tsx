@@ -10,6 +10,7 @@ import {
   Dimensions,
   Platform,
   Image,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -29,6 +30,7 @@ export default function ProcessingScreen() {
   const [outfitImage, setOutfitImage] = useState<string | null>(null);
   const [styleMeResult, setStyleMeResult] = useState<string | null>(null);
   const [expandedSection, setExpandedSection] = useState<'user' | 'outfit' | null>(null);
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   const previousParams = useRef<any>(null);
 
   useEffect(() => {
@@ -80,6 +82,13 @@ export default function ProcessingScreen() {
   }, [params.imageUri, params.mode, params.userImageUri, params.outfitImageUri]);
 
   const generateStyleMe = async () => {
+    // Check for API key first
+    const hasApiKey = await falService.getApiKeyFromStorage();
+    if (!hasApiKey) {
+      setShowApiKeyModal(true);
+      return;
+    }
+
     if (!userImage || !outfitImage) {
       Alert.alert(
         'Missing Images',
@@ -261,6 +270,45 @@ export default function ProcessingScreen() {
         </TouchableOpacity>
 
       </View>
+
+      {/* API Key Required Modal */}
+      <Modal
+        visible={showApiKeyModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowApiKeyModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContainer, { backgroundColor: theme.colors.cardBackground }]}>
+            <View style={styles.modalIconContainer}>
+              <IconSymbol name="bolt.slash" size={48} color={theme.colors.error} />
+            </View>
+            <Text style={[styles.modalTitle, { color: theme.colors.primaryText }]}>API Key Required</Text>
+            <Text style={[styles.modalMessage, { color: theme.colors.secondaryText }]}>
+              You need to add your Fal.ai API key in Settings to generate Style-Me results. Get your free API key from Fal.ai dashboard.
+            </Text>
+            
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.secondaryModalButton, { backgroundColor: theme.colors.surfaceSecondary }]}
+                onPress={() => setShowApiKeyModal(false)}
+              >
+                <Text style={[styles.modalButtonText, { color: theme.colors.primaryText }]}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.modalButton, styles.primaryModalButton, { backgroundColor: theme.colors.buttonBackground }]}
+                onPress={() => {
+                  setShowApiKeyModal(false);
+                  router.push('/(tabs)/settings');
+                }}
+              >
+                <Text style={[styles.modalButtonText, { color: theme.colors.buttonText }]}>Add API Key</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -421,5 +469,73 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 14,
     color: '#666',
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    borderRadius: 24,
+    padding: 32,
+    alignItems: 'center',
+    minWidth: 300,
+    maxWidth: 360,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 8,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 12,
+  },
+  modalIconContainer: {
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  modalMessage: {
+    fontSize: 16,
+    marginBottom: 28,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  primaryModalButton: {
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  secondaryModalButton: {
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  modalButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

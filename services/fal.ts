@@ -93,7 +93,8 @@ class FalService {
   }
 
   /**
-   * Test API connection using HTTP
+   * Test API connection without consuming credits
+   * Only validates API key format and basic connectivity
    */
   async testConnection(): Promise<{ success: boolean; error?: string }> {
     try {
@@ -103,26 +104,28 @@ class FalService {
         return { success: false, error: 'API key is required' };
       }
 
-      // Test with a simple API call
-      const testUrl = 'https://fal.run/fal-ai/nano-banana';
+      // Basic API key format validation
+      if (!this.config.apiKey.match(/^[a-zA-Z0-9\-_]+$/)) {
+        return { success: false, error: 'Invalid API key format' };
+      }
+
+      // Test connectivity to fal.ai without making a generation request
+      // Use a simple HEAD request to check if the service is reachable
+      const testUrl = 'https://fal.run';
       const response = await fetch(testUrl, {
-        method: 'POST',
+        method: 'HEAD',
         headers: {
           'Authorization': `Key ${this.config.apiKey}`,
-          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          prompt: 'test',
-          num_images: 1,
-          sync_mode: true,
-        }),
       });
 
-      if (response.ok) {
+      // A 401 means the key is invalid, anything else suggests connectivity
+      if (response.status === 401) {
+        return { success: false, error: 'Invalid API key' };
+      } else if (response.status >= 200 && response.status < 500) {
         return { success: true };
       } else {
-        const errorText = await response.text();
-        return { success: false, error: `HTTP ${response.status}: ${errorText}` };
+        return { success: false, error: `Service unavailable (HTTP ${response.status})` };
       }
     } catch (error) {
       return { 
@@ -194,7 +197,7 @@ class FalService {
       // Use one-time API call instead of subscription to prevent credit drain
       const result = await fal.run("fal-ai/nano-banana/edit", {
         input: {
-          prompt: "Use Image 1 as the target subject: preserve the exact body, skin, and pose, while removing all original clothing and accessories entirely. From Image 2, isolate the full outfit only (removing its model or background if present). Apply this outfit onto the subject from Image 1 so it naturally conforms to body shape, pose, and proportions. Ensure perfect integration by matching Image 1's lighting, shadows, perspective, and texture details. The final output must look like a single seamless photorealistic photo of the subject authentically wearing only the outfit from Image 2, with zero traces of the original garments.",
+          prompt: "Make this person wear the clothes from the second image. Remove all original clothing and replace with the outfit from image 2. Keep the same face, pose, body shape, and lighting. Photorealistic result.",
           image_urls: [userImageUrl, clothingImageUrl],
           num_images: 1,
           output_format: "jpeg"
@@ -268,10 +271,10 @@ class FalService {
   }
 
   /**
-   * Build prompt for virtual try-on
+   * Build prompt for virtual try-on using proven Nano Banana best practices
    */
   private buildStyleMePrompt(request: FalStyleMeRequest): string {
-    return "Use Image 1 as the target subject: preserve the exact body, skin, and pose, while removing all original clothing and accessories entirely. From Image 2, isolate the full outfit only (removing its model or background if present). Apply this outfit onto the subject from Image 1 so it naturally conforms to body shape, pose, and proportions. Ensure perfect integration by matching Image 1's lighting, shadows, perspective, and texture details. The final output must look like a single seamless photorealistic photo of the subject authentically wearing only the outfit from Image 2, with zero traces of the original garments.";
+    return "Make this person wear the clothes from the second image. Remove all original clothing and replace with the outfit from image 2. Keep the same face, pose, body shape, and lighting. Photorealistic result.";
   }
 
   /**

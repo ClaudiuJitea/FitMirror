@@ -46,6 +46,8 @@ const MAPPING = {
   'grid.circle': 'grid-view',
   'slider.horizontal.3': 'tune',
   'bolt.slash': 'flash-off',
+  'bolt.fill': 'flash-on',
+  'bolt': 'flash-auto',
   'gearshape': 'settings',
 } as IconMapping;
 

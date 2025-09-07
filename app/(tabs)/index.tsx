@@ -146,7 +146,7 @@ export default function StyleMeScreen() {
       const result = await ImagePicker.launchImageLibraryAsync({
         allowsEditing: false,
         quality: 0.8,
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
       });
 
       console.log('Image picker result:', result);

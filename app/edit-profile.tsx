@@ -155,7 +155,7 @@ export default function EditProfileScreen() {
             <View style={styles.profileImageContainer}>
               <Image
                 source={{ uri: profileImage }}
-                style={[styles.profileImage, { backgroundColor: theme.colors.surfaceSecondary }]}
+                style={[styles.profileImage, { backgroundColor: theme.colors.surfaceSecondary, borderColor: theme.colors.border }]}
                 contentFit="cover"
               />
               <TouchableOpacity style={[styles.changeImageButton, { backgroundColor: theme.colors.buttonBackground, borderColor: theme.colors.cardBackground }]}>
@@ -332,6 +332,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
+    borderWidth: 3,
   },
   changeImageButton: {
     position: 'absolute',

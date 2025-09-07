@@ -69,9 +69,9 @@ export default function SettingsScreen() {
 
       if (savedFalApiKey) {
         setFalApiKey(savedFalApiKey);
-        // Test fal.ai connection
-        const falConnectionTest = await falService.testConnection();
-        setFalConnectionStatus(falConnectionTest.success ? 'connected' : 'disconnected');
+        // Don't automatically test connection on load to prevent credit consumption
+        // User can manually test using the test button if needed
+        setFalConnectionStatus('disconnected');
       } else {
         setFalConnectionStatus('disconnected');
       }
@@ -218,22 +218,22 @@ export default function SettingsScreen() {
             </TouchableOpacity>
           </View>
           
-          <View style={styles.centeredProfileContainer}>
+          <TouchableOpacity style={styles.centeredProfileContainer} onPress={editProfile}>
             <View style={styles.profileImageContainer}>
               <Image
                 source={{ uri: userProfile.profileImage }}
-                style={styles.profileImage}
+                style={[styles.profileImage, { borderColor: theme.colors.border, backgroundColor: theme.colors.surfaceSecondary }]}
                 contentFit="cover"
               />
-              <View style={styles.editBadge}>
-                <IconSymbol name="pencil" size={10} color="#FFF" />
+              <View style={[styles.editBadge, { backgroundColor: theme.colors.buttonBackground, borderColor: theme.colors.cardBackground }]}>
+                <IconSymbol name="pencil" size={10} color={theme.colors.buttonText} />
               </View>
             </View>
             <View style={styles.centeredProfileInfo}>
               <Text style={[styles.profileName, { color: theme.colors.primaryText }]}>{userProfile.name}</Text>
               <Text style={[styles.profileEmail, { color: theme.colors.secondaryText }]}>{userProfile.email}</Text>
             </View>
-          </View>
+          </TouchableOpacity>
         </View>
 
 
@@ -502,6 +502,7 @@ const styles = StyleSheet.create({
     height: 50,
     borderRadius: 25,
     backgroundColor: '#F5F5F5',
+    borderWidth: 2,
   },
   editBadge: {
     position: 'absolute',

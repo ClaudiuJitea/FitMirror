@@ -1,55 +1,61 @@
 # FitMirror
 
 <div align="center">
-  <img src="appimages/2.png" alt="FitMirror Try-On Screen" width="300"/>
+  <img src="appimages/logo.png" alt="FitMirror Logo" width="120"/>
   <br/>
-  <em>AI-Powered Virtual Try-On Experience</em>
+  <h3>AI-Powered Virtual Try-On Experience</h3>
+  <em>Transform your shopping experience with intelligent fashion visualization</em>
 </div>
+
+---
 
 ## Overview
 
-**FitMirror** is a cutting-edge mobile application that revolutionizes online shopping by allowing users to virtually try on clothing items using advanced AI technology. Built with React Native and Expo, it provides a seamless experience for visualizing how clothes will look before making a purchase.
+**FitMirror** is a cutting-edge mobile application that revolutionizes online shopping by allowing users to virtually try on clothing items using advanced AI technology. Built with React Native and Expo, it provides a seamless, intuitive experience for visualizing how clothes will look before making a purchase.
 
 ---
 
 ## Screenshots
 
 <div align="center">
-  <img src="appimages/1.png" alt="Camera Interface" width="250" style="margin: 10px;"/>
-  <img src="appimages/2.png" alt="Try-On Generation" width="250" style="margin: 10px;"/>
-  <img src="appimages/3.png" alt="Settings Screen" width="250" style="margin: 10px;"/>
+  <img src="appimages/1.png" alt="Camera Interface" width="200" style="margin: 10px;"/>
+  <img src="appimages/4.png" alt="Style-Me Try-On Page" width="200" style="margin: 10px;"/>
+  <img src="appimages/2.png" alt="Gallery Management" width="200" style="margin: 10px;"/>
+  <img src="appimages/3.png" alt="Settings & Configuration" width="200" style="margin: 10px;"/>
 </div>
 
 <div align="center">
-  <em>Camera Interface • Try-On Generation • Settings & Configuration</em>
+  <em>Camera Interface • Style-Me Try-On • Gallery Management • Settings & Configuration</em>
 </div>
 
 ---
 
-## Key Features
+## ✨ Key Features
 
 ### **Core Functionality**
-- **Dual-Mode Camera**: Capture user photos and clothing items with intuitive interface
-- **AI-Powered Try-On**: Generate realistic virtual try-on results using Fal.ai API
-- **Smart Gallery**: Organize and manage captured images with categorized view
-- **Local Storage**: Save and share results with seamless device integration
+- 📸 **Smart Camera Interface**: Capture user photos and clothing items with "Snap your look" functionality
+- 🎨 **AI-Powered Style-Me**: Generate realistic virtual try-on results using advanced Fal.ai API
+- 🖼️ **Intelligent Gallery**: Organize and manage captured images with intuitive gallery view
+- 💾 **Local Storage**: Save and share results with seamless device integration
+- 🔄 **Dual-Mode Processing**: Support for both "Your Look" and "Your Item" capture modes
 
 ### **User Experience**
-- **Clean Material Design**: Modern, intuitive interface with smooth animations
-- **Real-Time Processing**: Live camera preview with instant visual feedback
-- **Loading States**: Elegant progress indicators and status updates
-- **Error Recovery**: Comprehensive error handling with user-friendly messages
-- **Cross-Platform**: Native performance on both iOS and Android
+- 🎯 **Intuitive Navigation**: Clean tab-based navigation (Style-Me, Gallery, Settings)
+- ⚡ **Real-Time Processing**: Live camera preview with instant visual feedback
+- 🌟 **Modern Design**: Sleek interface with smooth animations and transitions
+- 🔧 **Comprehensive Settings**: Account management, API configuration, and privacy controls
+- 📱 **Cross-Platform**: Native performance on both iOS and Android
 
 ### **Technical Excellence**
-- **TypeScript**: Full type safety and enhanced developer experience
-- **Image Optimization**: Automatic compression, resizing, and format optimization
-- **Offline Capability**: Local caching and storage for uninterrupted usage
-- **Performance**: Optimized rendering and memory management
+- 🔒 **Secure Configuration**: In-app API key management with connection testing
+- 🚀 **Performance Optimized**: Image compression, resizing, and memory management
+- 📡 **Offline Capability**: Local caching and storage for uninterrupted usage
+- 🛡️ **Privacy First**: Clear cache functionality and data management controls
+- 📊 **Account Integration**: User profile management with customizable settings
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Prerequisites
 ```bash
@@ -67,7 +73,7 @@
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/ClaudiuJitea/FitMirror.git
+   git clone https://github.com/your-username/FitMirror.git
    cd FitMirror
    ```
 
@@ -76,14 +82,14 @@
    npm install
    ```
 
-3. **Configure environment**
+3. **Configure environment** (Optional - can also configure in-app)
    ```bash
    cp .env.example .env
    ```
    
    Edit `.env` and add your API key:
    ```env
-   # Fal.ai API for virtual try-on (required, set in app settings)
+   # Fal.ai API for virtual try-on (can also be set in Settings)
    FAL_API_KEY=your_fal_api_key_here
    
    EXPO_PUBLIC_APP_NAME=FitMirror
@@ -102,16 +108,46 @@
 
 ---
 
-## Architecture
+## 📱 Usage Guide
+
+### **Getting Started with Style-Me**
+1. **Launch App**: Open FitMirror and navigate to the Style-Me tab
+2. **Capture Your Look**: Use "Snap your look" to take a photo of yourself
+3. **Add Your Item**: Capture or select a clothing item you want to try on
+4. **Generate Magic**: Tap "Generate Style-Me" to create your virtual try-on
+5. **Save & Share**: Review results and save to your gallery
+
+### **Camera Interface**
+- **Flash Control**: Toggle flash for optimal lighting
+- **Photo Gallery**: Quick access to existing photos
+- **Mode Selection**: Switch between "Outfit" and "Look" capture modes
+- **Capture Button**: Large, intuitive capture button for easy use
+
+### **Gallery Management**
+- **View Results**: Browse all your Style-Me creations
+- **Start New Session**: Quick access to begin new try-on sessions
+- **Organization**: Clean, grid-based layout for easy navigation
+- **Share Options**: Export and share your favorite looks
+
+### **Settings & Configuration**
+- **Account Management**: Customize your profile and personal information
+- **API Configuration**: Enter and test your Fal.ai API key
+- **Connection Status**: Real-time API connection monitoring
+- **Privacy Controls**: Clear cache and manage stored data
+- **Quick Access**: Direct link to get Fal.ai API key
+
+---
+
+## 🏗️ Architecture
 
 ### Project Structure
 ```
 FitMirror/
 ├── app/
 │   ├── (tabs)/
-│   │   ├── index.tsx          # Camera interface & capture
-│   │   ├── gallery.tsx        # Image gallery & management
-│   │   ├── settings.tsx       # App configuration
+│   │   ├── index.tsx          # Style-Me interface & camera
+│   │   ├── gallery.tsx        # Gallery management & viewing
+│   │   ├── settings.tsx       # Settings & configuration
 │   │   └── _layout.tsx        # Tab navigation layout
 │   ├── processing.tsx         # AI processing & status
 │   ├── result.tsx            # Result display & sharing
@@ -122,37 +158,41 @@ FitMirror/
 │   └── storage.ts            # Local data management
 ├── components/               # Reusable UI components
 ├── assets/                   # Images, icons, fonts
+├── appimages/               # App screenshots & assets
 └── utils/                    # Helper functions & utilities
 ```
 
 ### Technology Stack
-- **Frontend**: React Native, Expo SDK 50+
-- **Navigation**: Expo Router (file-based routing)
-- **UI Framework**: Native components with custom styling
-- **Image Processing**: Expo Image, Image Manipulator
-- **AI Integration**: Fal.ai for virtual try-on generation
+- **Frontend**: React Native, Expo SDK 53+
+- **Navigation**: Expo Router (file-based routing) + Tab Navigation
+- **UI Framework**: Native components with modern styling
+- **Image Processing**: Expo Image, Image Manipulator, Camera
+- **AI Integration**: Fal.ai API for virtual try-on generation
 - **Storage**: AsyncStorage, Expo FileSystem
-- **Camera**: Expo Camera, Image Picker
 - **Icons**: SF Symbols (iOS) / Material Icons (Android)
+- **State Management**: React Context and local state
 
 ---
 
-## AI Integration
+## 🤖 AI Integration
 
 FitMirror uses **Fal.ai** for realistic virtual try-on generation:
 
 ### Features
-- **Virtual Try-On**: Fal.ai nano-banana model for realistic clothing fitting
-- **Prompt Engineering**: Optimized prompts for fashion try-on scenarios
+- **Advanced Try-On**: Fal.ai's latest models for realistic clothing fitting
+- **Dual Input Support**: Process both user photos and clothing items
+- **Real-time Status**: Live connection monitoring and testing
 - **Error Handling**: Robust fallback mechanisms and retry logic
 - **Rate Limiting**: Built-in request throttling and queue management
 
 ### API Configuration
 
 **Option 1: Configure via App Settings (Recommended)**
-1. Launch the app and go to Settings tab
-2. Enter your Fal.ai API key (get one at [fal.ai/dashboard/keys](https://fal.ai/dashboard/keys))
-3. Test connection using the "Test API Connection" button
+1. Launch the app and go to **Settings** tab
+2. Scroll to **API Configuration** section
+3. Enter your Fal.ai API key (get one at [fal.ai/dashboard/keys](https://fal.ai/dashboard/keys))
+4. Test connection using the connection status indicator
+5. Start using Style-Me features immediately
 
 **Option 2: Environment Variables**
 1. Sign up at [Fal.ai](https://fal.ai/dashboard/keys) for virtual try-on API
@@ -161,29 +201,7 @@ FitMirror uses **Fal.ai** for realistic virtual try-on generation:
 
 ---
 
-## Usage Guide
-
-### **Taking the Perfect Shot**
-1. **Select Mode**: Choose between "Outfit" (clothing item) or "Look" (person)
-2. **Frame Subject**: Ensure good lighting and full visibility
-3. **Capture**: Use camera button or select from gallery
-4. **Review**: Preview and retake if needed
-
-### **Generating Try-Ons**
-1. **Upload Images**: Ensure both user photo and clothing item are selected
-2. **Process**: Tap "Generate Try-On" and wait for AI processing
-3. **Review Result**: View generated image in full-screen mode
-4. **Save & Share**: Export to gallery or share on social media
-
-### **Managing Your Gallery**
-- **Browse**: View all saved images in organized grid layout
-- **Categories**: Filter by user photos, outfits, or AI results
-- **Reuse**: Select previous images for new try-on sessions
-- **Delete**: Long-press to remove unwanted images
-
----
-
-## Development
+## 🛠️ Development
 
 ### Running in Development
 ```bash
@@ -216,17 +234,19 @@ npm run typecheck             # TypeScript validation
 # Testing Features
 # - Camera functionality on physical devices
 # - API integration with valid keys
-# - Offline capabilities
+# - Style-Me generation workflow
+# - Gallery management features
+# - Settings and account management
 # - Cross-platform compatibility
 ```
 
 ---
 
-## Configuration
+## ⚙️ Configuration
 
 ### Environment Variables
 ```env
-# Required for virtual try-on (can also be set in app settings)
+# API Configuration (can also be set in app settings)
 FAL_API_KEY=your_fal_api_key_here
 
 # App Configuration
@@ -242,14 +262,15 @@ Key settings in `app.json`:
     "name": "FitMirror",
     "slug": "fitmirror", 
     "scheme": "fitmirror",
-    "platforms": ["ios", "android", "web"]
+    "platforms": ["ios", "android", "web"],
+    "icon": "./appimages/logo.png"
   }
 }
 ```
 
 ---
 
-## Troubleshooting
+## 🔧 Troubleshooting
 
 ### Common Issues & Solutions
 
@@ -257,18 +278,25 @@ Key settings in `app.json`:
 - Verify camera permissions in device settings
 - Test on physical device (simulators have limited camera support)
 - Restart the app if camera appears frozen
+- Check "Snap your look" button responsiveness
 
-**API Connection Failed**
-- Verify Fal.ai API key is valid and active
-- Check network connectivity and firewall settings
-- Review API usage limits and billing status
-- Test connection using the "Test API Connection" button in Settings
-- Ensure API key is properly entered (no extra spaces or characters)
+**API Connection Issues**
+- Verify Fal.ai API key in **Settings > API Configuration**
+- Check connection status indicator (should show "Connected")
+- Test API connection using the built-in test functionality
+- Review API usage limits and billing status at fal.ai dashboard
+- Ensure network connectivity and firewall settings
+
+**Style-Me Generation Failures**
+- Ensure both "Your Look" and "Your Item" images are captured
+- Check image quality and lighting conditions
+- Verify API key is active and has sufficient credits
+- Try clearing cache in **Settings > Privacy & Data**
 
 **App Performance Issues**
-- Clear app cache in settings
-- Reduce image resolution for faster processing
+- Use "Clear Cache" in Settings > Privacy & Data
 - Close other apps to free memory
+- Reduce image resolution for faster processing
 - Update to latest Expo SDK version
 
 **Build Failures**
@@ -284,7 +312,7 @@ npm install -g @expo/cli@latest
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 We welcome contributions! Here's how to get started:
 
@@ -296,45 +324,49 @@ We welcome contributions! Here's how to get started:
 
 ### Development Guidelines
 - Follow TypeScript best practices
-- Maintain consistent code styling
-- Add tests for new features
-- Update documentation as needed
+- Maintain consistent code styling with `npx expo lint`
+- Test new features on both iOS and Android
+- Update documentation and screenshots as needed
+- Ensure API integrations work correctly
 
 ---
 
-## Roadmap
+## 🗺️ Roadmap
 
 ### **Short Term (v1.1)**
-- [ ] Multiple clothing items support
-- [ ] Enhanced AI prompt customization
-- [ ] Batch processing capabilities
-- [ ] Export quality settings
+- [ ] Batch Style-Me processing for multiple items
+- [ ] Enhanced gallery filtering and search
+- [ ] Style history and favorites
+- [ ] Export quality settings and formats
 
 ### **Medium Term (v1.5)**
-- [ ] User authentication & cloud sync
-- [ ] Social sharing features
+- [ ] Cloud sync and backup functionality
+- [ ] Social sharing and community features
 - [ ] Outfit recommendation engine
 - [ ] Advanced image editing tools
+- [ ] Multiple AI model support
 
 ### **Long Term (v2.0)**
-- [ ] 3D virtual try-on
-- [ ] AR integration
-- [ ] Multi-user collaboration
-- [ ] Brand partnerships
+- [ ] 3D virtual try-on capabilities
+- [ ] AR integration for real-time try-on
+- [ ] Multi-user collaboration features
+- [ ] Brand partnerships and integrations
+- [ ] AI-powered style recommendations
 
 ---
 
-## License
+## 📄 License
 
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
 ### Powered By
 - **[Expo](https://expo.dev/)** - Universal React development platform
 - **[Fal.ai](https://fal.ai/)** - AI-powered virtual try-on technology
+- **[React Native](https://reactnative.dev/)** - Cross-platform mobile framework
 
 ### Design Inspiration
 - **[SF Symbols](https://developer.apple.com/sf-symbols/)** - Beautiful iconography
@@ -343,14 +375,14 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 ---
 
-## Support & Contact
+## 📞 Support & Contact
 
 ### **Issues & Bug Reports**
-Create an issue on [GitHub Issues](https://github.com/ClaudiuJitea/FitMirror/issues)
+Create an issue on [GitHub Issues](https://github.com/your-username/FitMirror/issues)
 
 ### **Questions & Discussions**
-- Check existing [Discussions](https://github.com/ClaudiuJitea/FitMirror/discussions)
-- Review [Documentation](https://github.com/ClaudiuJitea/FitMirror/wiki)
+- Check existing [Discussions](https://github.com/your-username/FitMirror/discussions)
+- Review [Documentation](https://github.com/your-username/FitMirror/wiki)
 
 ### **Additional Resources**
 - [Expo Documentation](https://docs.expo.dev/)
@@ -360,6 +392,8 @@ Create an issue on [GitHub Issues](https://github.com/ClaudiuJitea/FitMirror/iss
 ---
 
 <div align="center">
+  <img src="appimages/logo.png" alt="FitMirror Logo" width="60"/>
+  <br/>
   <strong>Made with cutting-edge AI technology</strong>
   <br/>
   <em>Transform your shopping experience with FitMirror</em>
